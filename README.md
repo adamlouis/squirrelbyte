@@ -1,2 +1,3 @@
-# squirrelbyte
-a tool for gathering &amp; exploring data
+#squirrelbyte
+
+`squirrelbyte` is a tool for gathering & exploring data.

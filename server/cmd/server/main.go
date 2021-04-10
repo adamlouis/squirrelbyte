@@ -1,0 +1,128 @@
+package main
+
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server"
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+const (
+	_envServerPort             = "SQUIRRELBYTE_SERVER_PORT"
+	_envSQLiteConnectionString = "SQUIRRELBYTE_SQLITE3_CONNECTION_STRING"
+	_envStaticDir              = "SQUIRRELBYTE_STATIC_DIR"
+	_envAllowedHTTPMethods     = "SQUIRRELBYTE_ALLOWED_HTTP_METHODS"
+)
+
+type config struct {
+	ServerPort         int
+	SQLite3Path        string
+	StaticDir          string
+	AllowedHTTPMethods map[string]bool
+}
+
+func newConfig() (*config, error) {
+	if fDotenv != nil && *fDotenv != "" {
+		err := godotenv.Load(*fDotenv)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	serverPort, err := strconv.Atoi(os.Getenv(_envServerPort))
+	if err != nil {
+		return nil, err
+	}
+
+	ms := strings.Split(os.Getenv(_envAllowedHTTPMethods), ",")
+	a := map[string]bool{}
+	for _, m := range ms {
+		a[m] = true
+	}
+
+	return &config{
+		ServerPort:         serverPort,
+		SQLite3Path:        os.Getenv(_envSQLiteConnectionString),
+		StaticDir:          os.Getenv(_envStaticDir),
+		AllowedHTTPMethods: a,
+	}, nil
+}
+
+func newDB(c *config) (*sqlx.DB, error) {
+	db, err := sqlx.Open("sqlite3", c.SQLite3Path)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+var (
+	fDotenv = flag.String("dotenv", "", "a .env file from which to read environment variables. useful for local development.")
+)
+
+func main() {
+	flag.Parse()
+
+	c, err := newConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := newDB(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	fmt.Printf("starting server :%d\n", c.ServerPort)
+	err = server.New().Serve(&server.Opts{
+		Port:      c.ServerPort,
+		DB:        db,
+		StaticDir: c.StaticDir,
+		Middlewares: []mux.MiddlewareFunc{
+			func(next http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					now := time.Now()
+					next.ServeHTTP(w, r)
+					// todo: produce just 1 structured event per req w/ all metadata
+					// todo: do w/ tracing / opentelemetry, start a span, pass down context, etc
+					j, _ := json.Marshal(map[string]interface{}{
+						"type":        "REQUEST",
+						"method":      r.Method,
+						"name":        fmt.Sprintf("%s:%s", r.URL.Path, r.Method),
+						"duration_ms": time.Since(now) / time.Millisecond,
+						"path":        r.URL.Path,
+						"time":        time.Now().Format(time.RFC3339),
+					})
+					fmt.Println(string(j))
+				})
+			},
+			func(next http.Handler) http.Handler {
+				// auth - use both `mode=ro` at sqlite level & block http methods
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if !c.AllowedHTTPMethods[r.Method] {
+						w.Header().Add("Content-Type", "application/json")
+						w.WriteHeader(http.StatusForbidden)
+						_, _ = w.Write([]byte(`{"message":"forbidden http method"}`))
+						return
+					}
+					next.ServeHTTP(w, r)
+				})
+			},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}

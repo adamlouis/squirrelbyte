@@ -1,0 +1,44 @@
+{
+    "name": "web",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "lodash": "^4.17.21",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "react-draggable": "^4.4.3",
+        "react-virtualized": "^9.22.3",
+        "styled-components": "^5.2.1"
+    },
+    "scripts": {
+        "start": "PORT=8887 react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "eslint": "^7.23.0",
+        "eslint-config-prettier": "^8.1.0",
+        "prettier": "^2.2.1",
+        "react-scripts": "4.0.3"
+    },
+    "proxy": "http://localhost:8888"
+}

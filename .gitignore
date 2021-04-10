@@ -1,0 +1,11 @@
+.DS_STORE
+
+node_modules
+
+server/bin/*
+!server/bin/.empty
+
+web/build/*
+!web/build/.empty
+
+*.db
