@@ -1,4 +1,4 @@
-# squirrelbyte
+# squirrelbyte 🐿️
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite.
 
