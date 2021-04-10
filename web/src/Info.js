@@ -108,9 +108,9 @@ export function Info() {
             <li>Keep costs & infrastructure complexity low</li>
             <li>Self-host it / own my data</li>
           </ul>
-          Here's a first step towards these goals -- a document / search server
-          & UI, drawing inspiration from tools that I like. What's here is
-          minimal, but could become more.
+          The web application here is a first step towards these goals -- a
+          document / search server & UI, drawing inspiration from tools that I
+          like. What's here is minimal, but could become more.
         </p>
         <p>
           <strong>what</strong>
@@ -138,7 +138,7 @@ export function Info() {
           >
             react-virtualized
           </a>{" "}
-          so rendering thousands of rows is performant. The "UI" is a JSON
+          so rendering thousands of rows is performant. The query "UI" is a JSON
           editor, but could be nice with{" "}
           <a
             target="_blank"
