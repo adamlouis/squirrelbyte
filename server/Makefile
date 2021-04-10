@@ -11,7 +11,7 @@ run: build
 	./bin/server --dotenv .env.local
 
 run-ro: build
-	./bin/server --dotenv .env.local.read
+	./bin/server --dotenv .env.local.ro
 
 run-get-hn-now:
 	go run scripts/get-hn-now/main.go

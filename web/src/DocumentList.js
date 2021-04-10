@@ -132,19 +132,29 @@ const ModalButton = styled.button`
 
 export function DocumentList(props) {
   const [selectedDoc, setSelectedDoc] = useState(undefined);
-  const [selectedPaths, setSelectedPaths] = useState(_.slice(_.uniq(_.filter([
-    // hand pick for demo
-    "body.type",
-    "body.title",
-    "body.text",
-    "body.score",
-    "body.by",
-    "body.url",
-    "id",
-    "body",
-    "header",
-    ...props.paths,
-  ], p => _.includes(props.paths, p))), 0, 5));
+  const [selectedPaths, setSelectedPaths] = useState(
+    _.slice(
+      _.uniq(
+        _.filter(
+          [
+            // hand pick for demo
+            "body.title",
+            "body.url",
+            "header.hn_url",
+            "body.score",
+            "body.by",
+            "body",
+            "header",
+            "id",
+            ...props.paths,
+          ],
+          (p) => _.includes(props.paths, p)
+        )
+      ),
+      0,
+      4
+    )
+  );
   const columns = ["", ...selectedPaths];
   const selectedPathSet = new Set(selectedPaths);
 
@@ -209,6 +219,7 @@ export function DocumentList(props) {
     return Sizes.DefaultColumnWidth;
   };
 
+  // todo: preserve column sizes on recompute
   const onHeadersInit = (widths) => {
     setWidthsByColumn(widths);
     if (bodyRef.current) {

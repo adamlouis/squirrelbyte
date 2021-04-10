@@ -19,8 +19,3 @@ export const subscribeKeyDown = (code, metaKey, fn) => {
     subscribers[k] = _.filter(subscribers[k], (f) => f !== fn);
   };
 };
-
-
-window.addEventListener('resize', (a,b,c) => {
-  console.log('o dear',a,b,c)
-});

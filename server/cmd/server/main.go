@@ -23,6 +23,7 @@ const (
 	_envSQLiteConnectionString = "SQUIRRELBYTE_SQLITE3_CONNECTION_STRING"
 	_envStaticDir              = "SQUIRRELBYTE_STATIC_DIR"
 	_envAllowedHTTPMethods     = "SQUIRRELBYTE_ALLOWED_HTTP_METHODS"
+	_envAllowedHTTPPaths       = "SQUIRRELBYTE_ALLOWED_HTTP_PATHS"
 )
 
 type config struct {
@@ -30,6 +31,7 @@ type config struct {
 	SQLite3Path        string
 	StaticDir          string
 	AllowedHTTPMethods map[string]bool
+	AllowedHTTPPaths   map[string]bool
 }
 
 func newConfig() (*config, error) {
@@ -46,16 +48,22 @@ func newConfig() (*config, error) {
 	}
 
 	ms := strings.Split(os.Getenv(_envAllowedHTTPMethods), ",")
-	a := map[string]bool{}
+	am := map[string]bool{}
 	for _, m := range ms {
-		a[m] = true
+		am[m] = true
+	}
+	ps := strings.Split(os.Getenv(_envAllowedHTTPPaths), ",")
+	ap := map[string]bool{}
+	for _, p := range ps {
+		ap[p] = true
 	}
 
 	return &config{
 		ServerPort:         serverPort,
 		SQLite3Path:        os.Getenv(_envSQLiteConnectionString),
 		StaticDir:          os.Getenv(_envStaticDir),
-		AllowedHTTPMethods: a,
+		AllowedHTTPMethods: am,
+		AllowedHTTPPaths:   ap,
 	}, nil
 }
 
@@ -109,12 +117,14 @@ func main() {
 				})
 			},
 			func(next http.Handler) http.Handler {
-				// auth - use both `mode=ro` at sqlite level & block http methods
+				// allow any req with "allowed methods" OR "allowed paths"
+				// used to block reqs in read only mode
+				// one day, proper authz
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if !c.AllowedHTTPMethods[r.Method] {
+					if !c.AllowedHTTPMethods[r.Method] && !c.AllowedHTTPPaths[r.URL.Path] {
 						w.Header().Add("Content-Type", "application/json")
 						w.WriteHeader(http.StatusForbidden)
-						_, _ = w.Write([]byte(`{"message":"forbidden http method"}`))
+						_, _ = w.Write([]byte(`{"message":"forbidden"}`))
 						return
 					}
 					next.ServeHTTP(w, r)

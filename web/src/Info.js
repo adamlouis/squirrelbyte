@@ -36,6 +36,7 @@ export function Info() {
       <InfoRow onClick={onClickShow}>
         <p>
           <strong>author's note</strong>
+          {show ? "" : <span>&nbsp;see more</span>}
         </p>
         <button
           style={{
@@ -56,58 +57,60 @@ export function Info() {
           <br />
           <br />
           Some tools I like for exploring data in general are:
-          <ul>
-            <li>
-              <a target="_blank" rel="noreferrer" href="https://datasette.io/">
-                Datasette
-              </a>{" "}
-              - for exploring sqlite databases
-            </li>
-            <li>
-              <a
-                target="_blank"
-                rel="noreferrer"
-                href="https://stedolan.github.io/jq/"
-              >
-                jq
-              </a>{" "}
-              - for sifting through local json files
-            </li>
-            <li>
-              <a
-                target="_blank"
-                rel="noreferrer"
-                href="https://www.honeycomb.io/overview/"
-              >
-                Honeycomb
-              </a>{" "}
-              - for general observability of distributed systems ... but in this
-              case, for the query UI & how it works nicely for high cardinality
-              data.
-            </li>
+        </p>
+        <ul>
+          <li>
+            <a target="_blank" rel="noreferrer" href="https://datasette.io/">
+              Datasette
+            </a>{" "}
+            - for exploring sqlite databases
+          </li>
+          <li>
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://stedolan.github.io/jq/"
+            >
+              jq
+            </a>{" "}
+            - for sifting through local json files
+          </li>
+          <li>
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://www.honeycomb.io/overview/"
+            >
+              Honeycomb
+            </a>{" "}
+            - for general observability of distributed systems ... but in this
+            case, for the query UI & how it works nicely for high cardinality
+            data.
+          </li>
 
-            <li>
-              <a target="_blank" rel="noreferrer" href="https://grafana.com/">
-                Grafana
-              </a>{" "}
-              /{" "}
-              <a
-                target="_blank"
-                rel="noreferrer"
-                href="https://www.elastic.co/demos"
-              >
-                ElasticSearch + Kibana
-              </a>{" "}
-              - for general dashboard building, data ingestion, etc.
-            </li>
-          </ul>
-          For my usecase, I wanted a way to:
-          <ul>
-            <li>Stash my data in its "original" JSON form</li>
-            <li>Explore it later & build whatever views I want</li>
-            <li>Keep costs & infrastructure complexity low</li>
-            <li>Self-host it / own my data</li>
-          </ul>
+          <li>
+            <a target="_blank" rel="noreferrer" href="https://grafana.com/">
+              Grafana
+            </a>{" "}
+            /{" "}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://www.elastic.co/demos"
+            >
+              ElasticSearch + Kibana
+            </a>{" "}
+            - for general dashboard building, data ingestion, etc.
+          </li>
+        </ul>
+        <p>For my usecase, I wanted a way to:</p>
+        <ul>
+          <li>Stash my data in its "original" JSON form</li>
+          <li>Explore it later & build whatever views I want</li>
+          <li>Keep costs & infrastructure complexity low</li>
+          <li>Self-host it / own my data</li>
+        </ul>
+        <p>
           The web application here is a first step towards these goals -- a
           document / search server & UI, drawing inspiration from tools that I
           like. What's here is minimal, but could become more.
@@ -193,7 +196,7 @@ export function Info() {
           <strong>example</strong>
           <br />
           <br />
-          As a demo, this applications offers ~10k recent HackerNews article
+          As a demo, this applications offers ~16k recent HackerNews article
           submissions. The `body` field of each JSON document is the raw value
           from the{" "}
           <a
@@ -202,12 +205,15 @@ export function Info() {
             href="https://github.com/HackerNews/API"
           >
             HackerNews API
-          </a>
-          . The links below load some queries I've prepared:
+          </a>{" "}
+          and the `header` field has links the HN page and the JSON API url. The
+          links below load some queries I've prepared:
+        </p>
+        <div>
           <ul>
             {Queries.map((q) => (
-              <li>
-                <div key={q.name}>
+              <li key={q.name}>
+                <div>
                   <a href={`/?q=${encodeURIComponent(JSON.stringify(q.q))}`}>
                     {q.name}
                   </a>
@@ -215,7 +221,17 @@ export function Info() {
               </li>
             ))}
           </ul>{" "}
+        </div>
+        <p>
           See the{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            href="https://github.com/adamlouis/squirrelbyte"
+          >
+            code here
+          </a>
+          &nbsp;and&nbsp;
           <a
             target="_blank"
             rel="noreferrer"
