@@ -215,6 +215,19 @@ export function Info() {
               </li>
             ))}
           </ul>{" "}
+          See the{" "}
+          <a
+            target="_blank"
+            rel="noreferrer"
+            href="https://github.com/adamlouis/squirrelbyte/blob/main/server/internal/pkg/document/jsonlogic/jsonlogic.go#L21"
+          >
+            supported operators here
+          </a>
+          &nbsp;and&nbsp;
+          <a target="_blank" rel="noreferrer" href="https://jsonlogic.com/">
+            jsonlogic reference here
+          </a>
+          .
         </p>
       </div>
     </div>
