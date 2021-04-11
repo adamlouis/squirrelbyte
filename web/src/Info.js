@@ -193,21 +193,19 @@ export function Info() {
       </div>
       <div>
         <p>
-          <strong>example</strong>
+          <strong>example dataset</strong>
           <br />
           <br />
-          As a demo, this applications offers ~16k recent HackerNews article
-          submissions. The `body` field of each JSON document is the raw value
-          from the{" "}
+          This application has ~16k recent HackerNews article submissions. The
+          `body` field of each JSON document is the raw value from the{" "}
           <a
             target="_blank"
             rel="noreferrer"
             href="https://github.com/HackerNews/API"
           >
             HackerNews API
-          </a>{" "}
-          and the `header` field has links the HN page and the JSON API url. The
-          links below load some queries I've prepared:
+          </a>
+          . Here are some queries to get started:
         </p>
         <div>
           <ul>
