@@ -2,54 +2,84 @@
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite.
 
-see it at [https://squirrelbyte.com/](https://squirrelbyte.com/)
+See a demo at [https://squirrelbyte.com/](https://squirrelbyte.com/).
+See a discussion on [Hacker News](https://news.ycombinator.com/item?id=26766557).
 
-# server
+## how to run
 
-`server` is the squirrelbyte server
+## code overview
 
-it's a json blob server
+There are 2 main components of `squirrelbyte` represented as top-level directories in the project: `server` and `web`
 
-JSON documents are stashed in sqlite using the sqlite json1 extension.
+## server
 
-it supports a query syntax similar to [jsonlogic](https://jsonlogic.com/)
+`server` is the the squirrelbyte JSON / REST API.
 
-it uses sqlite as a data store
+It stores JSON documents in SQLite using the SQLite json1 extension & serves them via a REST API.
 
-the `/documents:search` endpoint DOES NOT use prepared queries, so it's recommended `/documents:search` is used only in safe contexts (read-only, local)
+The codebase attempts to adhere to the [Google API Design Guide](https://cloud.google.com/apis/design) and [Standard Go Project Layout](https://github.com/golang-standards/project-layout).
 
-feels verbose ... too much indirection ... but the show must go on
+The API is defined as:
 
-it serves the static web bundle
+```
+GET    /status
+GET    /documents
+POST   /documents
+GET    /documents/{documentID}
+PUT    /documents/{documentID}
+DELETE /documents/{documentID}
+POST   /documents:search
+```
 
-perhaps more to come ... getting it out there
+Where a `document` resource is:
 
-# web
+```
+{
+    "id": "some-unique-identifier",
+    "body" { ... some arbitrary json object ... },
+    "header" { ... some arbitrary json object ... },
+    "created_at": "2021-04-11T21:22:53",
+    "updated_at":  "2021-04-11T21:22:53",
+}
+```
 
-`web` is the squirrel byte web application.
+The search endpoint, `POST /documents:search`, supports a query sytax based on 1) SQL and 2) [jsonlogic](https://jsonlogic.com/). The POST body takes the form:
 
-`web` is written in React is js & with frequent use of the `lodash` library.
+```
+{
+  "select": [ ... json logic expressions ... ],
+  "where": json logic expression,
+  "group_by": [ ... json logic expressions ... ],
+  "order_by": [ ... json logic expressions ... ],
+  "limit": 1000
+}
+```
 
-the project was started using the `create-react-app` utility.
+See the [jsonlogic](https://jsonlogic.com/) documentation for details on the syntax. Note that the `squirrelbyte` supported operators are different than those in the JSON logic docs. See the `squirrelbyte` supported operators [in the code here](https://github.com/adamlouis/squirrelbyte/blob/main/server/internal/pkg/document/jsonlogic/jsonlogic.go#L21).
 
-it uses to `react-virtualized` to maintain good performance queries return many results.
+In production mode, `server` also serves static web assets.
 
-few other deps
+In development mode, `web` and `server` are run as separate processes and `web` proxies requests to `server`.
 
-the code quality & aesthetics are rough ... performance & functionality should be good.
+## web
 
-perhaps more to come!
+`web` is the `squirrelbyte` web application.
 
+`web` is written in React JS.
+
+The project was creating the using the `create-react-app` utility.
+
+`web` is the frontend UI for `server`.
 
 ## why
 
 I like to explore & understand data from the software services I use - Strava, Garmin, GitHub, AWS, & some others.
 
 Some tools I like for exploring data in general are:
-- Datasette - for exploring sqlite databases
-- jq - for sifting through local json files
-- Honeycomb - for general observability of distributed systems ... but in this case, for the query UI & how it works nicely for high cardinality data.
-- Grafana / ElasticSearch + Kibana - for general dashboard building, data ingestion, etc.
+- [Datasette](https://datasette.io/) - for exploring sqlite databases
+- [jq](https://stedolan.github.io/jq/) - for sifting through local json files
+- [Honeycomb](https://www.honeycomb.io/overview/) - for general observability of distributed systems ... but in this case, for the query UI & how it works nicely for high cardinality data.
+- [Grafana](https://grafana.com/) / [ElasticSearch + Kibana](https://www.elastic.co/demos) - for general dashboard building, data ingestion, etc.
 
 For my usecase, I wanted a way to:
 - Stash my data in its "original" JSON form
@@ -57,4 +87,6 @@ For my usecase, I wanted a way to:
 - Keep costs & infrastructure complexity low
 - Self-host it / own my data
 
-`squirrelbyte` is first step towards these goals -- a document / search server & UI, drawing inspiration from tools that I like. What's here is minimal, but could become more.
+`squirrelbyte` is first step towards these goals -- a document / search server & UI, drawing inspiration from tools that I like.
+
+What's here is minimal, but could become more.
