@@ -1,3 +1,5 @@
+https://github.com/adamlouis/squirrelbyte/actions/workflows/golangci-lint.yml/badge.svg
+
 # squirrelbyte 🐿️
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite.
