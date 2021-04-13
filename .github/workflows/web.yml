@@ -17,3 +17,9 @@ jobs:
     - name: Run pretty
       run: npm run pretty
       working-directory: web
+    - name: Run tests
+      run: npm run test
+      working-directory: web
+    - name: Run build
+      run: npm run build
+      working-directory: web

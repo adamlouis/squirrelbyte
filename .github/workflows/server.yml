@@ -14,3 +14,9 @@ jobs:
         with:
           version: v1.39.0
           working-directory: server
+      - name: Run tests
+        run: make test
+        working-directory: server
+      - name: Run build
+        run: make build
+        working-directory: server
