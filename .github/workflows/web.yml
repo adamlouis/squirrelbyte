@@ -3,7 +3,7 @@ name: web
 on: [push, pull_request]
 
 jobs:
-  build:
+  web:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository

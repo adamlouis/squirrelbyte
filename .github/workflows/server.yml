@@ -3,7 +3,7 @@ name: server
 on: [push, pull_request]
 
 jobs:
-  golangci:
+  server:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
