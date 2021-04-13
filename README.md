@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/adamlouis/squirrelbyte)](https://goreportcard.com/report/github.com/adamlouis/squirrelbyte)
 
 
-# squirrelbyte 🐿️
+# squirrelbyte
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite.
 
