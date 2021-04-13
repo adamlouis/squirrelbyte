@@ -1,0 +1,24 @@
+
+linters:
+  enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+    # - gocyclo # TODO: address complex fns
+    # - golint # TODO: add comments
+    - gosec
+    - misspell
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+
+issues:
+  exclude-use-default: false

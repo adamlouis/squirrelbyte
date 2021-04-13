@@ -1,0 +1,19 @@
+name: JS Lint
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Install modules
+      run: npm install
+      working_directory: web
+    - name: Run lint
+      run: npm run lint
+      working_directory: web
+    - name: Run pretty
+      run: npm run pretty
+      working_directory: web

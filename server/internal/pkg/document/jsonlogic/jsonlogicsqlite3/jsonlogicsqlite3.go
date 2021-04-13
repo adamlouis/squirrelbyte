@@ -264,7 +264,7 @@ func requireNOperands(operator string, operands []interface{}, n int) error {
 		if n > 1 {
 			pl = "s"
 		}
-		return fmt.Errorf("operator `%s` expectes exactly %d operand%s but recieved %d: %v", operator, n, pl, len(operands), operands)
+		return fmt.Errorf("operator `%s` expects exactly %d operand%s but received %d: %v", operator, n, pl, len(operands), operands)
 	}
 	return nil
 }

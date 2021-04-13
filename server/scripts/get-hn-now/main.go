@@ -38,7 +38,7 @@ func loadItems(ids []int) error {
 	for _, id := range ids {
 		itemURL := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%d.json", id)
 
-		itemResp, err := http.Get(itemURL)
+		itemResp, err := http.Get(itemURL) //nolint
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func loadItems(ids []int) error {
 }
 
 func loadList(url string) error {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint
 	if err != nil {
 		return err
 	}
