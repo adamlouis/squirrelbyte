@@ -42,10 +42,10 @@ const Row = styled.div`
   justify-content: flex-end;
 `;
 
-const Clicker = styled.div`
+const ClickTarget = styled.div`
   cursor: pointer;
   :hover {
-    opacity: 0.5;
+    text-decoration: underline;
   }
 `;
 
@@ -86,7 +86,7 @@ export function InfoBox() {
 
   return (
     <Container>
-      <Clicker onClick={onClickToggle}>
+      <ClickTarget onClick={onClickToggle}>
         <Content>
           <Row>
             <IndentButton onClick={onClickToggle}>
@@ -95,7 +95,7 @@ export function InfoBox() {
           </Row>
           <ReactMarkdown>{headerMD}</ReactMarkdown>
         </Content>
-      </Clicker>
+      </ClickTarget>
       {showBody && (
         <Content>
           <ReactMarkdown>{bodyMD}</ReactMarkdown>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { A } from './standard/Link';
 import { Colors } from '../utils/Colors';
@@ -34,9 +34,10 @@ const LinkContainer = styled.div`
   display: flex;
   align-items: center;
   justify-conent: center;
+  border: solid black 1px;
   padding: 6px;
   font-size: 12px;
-  border-radius: 4px;
+  border-radius: 3px;
 
   span {
     padding-left: 10px;
