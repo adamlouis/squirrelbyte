@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
-import _ from "lodash";
-import styled from "styled-components";
-import { Grid } from "react-virtualized";
-import Draggable from "react-draggable";
-import { Modal } from "./Modal";
-import { subscribeKeyDown } from "./KeyPublisher";
-import Util from "./Util";
+import React, { useEffect, useState, useRef } from 'react';
+import _ from 'lodash';
+import styled from 'styled-components';
+import { Grid } from 'react-virtualized';
+import Draggable from 'react-draggable';
+import { Modal } from './Modal';
+import { subscribeKeyDown } from './KeyPublisher';
+import Util from './Util';
 
 const Sizes = {
   DefaultRowHeight: 30,
@@ -14,7 +14,7 @@ const Sizes = {
 };
 
 const BodyContainer = styled.div`
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
   width: 100%;
   height: 100%;
 `;
@@ -45,8 +45,8 @@ const ColLabel = styled(Elip)`
 `;
 
 const Cell = styled.div`
-  font-family: "Courier New", Courier, monospace;
-  background-color: ${(p) => p.backgroundColor || ""};
+  font-family: 'Courier New', Courier, monospace;
+  background-color: ${(p) => p.backgroundColor || ''};
   border: solid #ddd 1px;
   font-size: 12px;
   display: flex;
@@ -112,7 +112,7 @@ const ColumnListRow = styled.div`
   }
 `;
 const ColumnListLabel = styled.span`
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
 `;
 const ColumnListCheck = styled.input`
   cursor: pointer;
@@ -138,14 +138,14 @@ export function DocumentList(props) {
         _.filter(
           [
             // hand pick for demo
-            "body.title",
-            "body.url",
-            "header.hn_url",
-            "body.score",
-            "body.by",
-            "body",
-            "header",
-            "id",
+            'body.title',
+            'body.url',
+            'header.hn_url',
+            'body.score',
+            'body.by',
+            'body',
+            'header',
+            'id',
             ...props.paths,
           ],
           (p) => _.includes(props.paths, p)
@@ -155,7 +155,7 @@ export function DocumentList(props) {
       4
     )
   );
-  const columns = ["", ...selectedPaths];
+  const columns = ['', ...selectedPaths];
   const selectedPathSet = new Set(selectedPaths);
 
   const [gridWidth, setGridWidth] = useState(0);
@@ -197,7 +197,7 @@ export function DocumentList(props) {
   const onExitModal = () => setSelectedDoc(undefined);
 
   useEffect(() => {
-    const unsubscribeEscape = subscribeKeyDown("Escape", false, () => {
+    const unsubscribeEscape = subscribeKeyDown('Escape', false, () => {
       setSelectedDoc(undefined);
     });
     return unsubscribeEscape;
@@ -238,7 +238,7 @@ export function DocumentList(props) {
   const onScrollBody = (data) => setScrollLeft(data.scrollLeft);
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: 'flex' }}>
       {selectedDoc && (
         <Modal onExit={onExitModal}>
           <ModalButtonRow>
@@ -276,7 +276,7 @@ export function DocumentList(props) {
       </div>
       <DataContainer>
         <DraggableHeaders
-          key={_.join(columns, "")} // the key is cat of all columns, re-mount if any col changes
+          key={_.join(columns, '')} // the key is cat of all columns, re-mount if any col changes
           onInit={onHeadersInit}
           onDragStart={() => {}}
           onDragStop={onDragHeaderStop}
@@ -304,7 +304,7 @@ export function DocumentList(props) {
                     parent={cellRenderProps.parent}
                     style={cellRenderProps.style}
                     backgroundColor={
-                      cellRenderProps.rowIndex % 2 ? "#f8f8f8" : "#e8e8e8"
+                      cellRenderProps.rowIndex % 2 ? '#f8f8f8' : '#e8e8e8'
                     }
                   >
                     {c}
@@ -385,17 +385,17 @@ class DraggableHeaders extends React.Component {
     return (
       <div
         style={{
-          overflow: "hidden",
+          overflow: 'hidden',
           width: this.props.width,
-          display: "flex",
-          alignItems: "center",
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         <div
           ref={this.containerRef}
           style={{
-            padding: "4px",
-            display: "inline-flex",
+            padding: '4px',
+            display: 'inline-flex',
             transform: `translateX(${this.props.scrollLeft * -1}px)`,
           }}
         >
@@ -405,13 +405,13 @@ class DraggableHeaders extends React.Component {
                 key={i}
                 ref={this.refCollector(idx)}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   width: `${this.widths[idx]}px`,
-                  overflow: "visible",
-                  ":hover": {
-                    backgroundColor: "#eee",
+                  overflow: 'visible',
+                  ':hover': {
+                    backgroundColor: '#eee',
                   },
                 }}
               >
@@ -420,9 +420,9 @@ class DraggableHeaders extends React.Component {
                 {this.disabled.has(idx) ? (
                   <div
                     style={{
-                      height: "100%",
-                      borderLeft: "solid #bbb 1px",
-                      marginRight: "3px", // seems about right
+                      height: '100%',
+                      borderLeft: 'solid #bbb 1px',
+                      marginRight: '3px', // seems about right
                     }}
                   />
                 ) : (
@@ -452,7 +452,7 @@ class DraggableHeaders extends React.Component {
                       }
                       if (el) {
                         const sz = parseFloat(
-                          _.replace(el.style.width, "px", "")
+                          _.replace(el.style.width, 'px', '')
                         );
                         const newSz = Math.max(sz + data.deltaX, this.minWidth);
                         el.style.width = `${newSz}px`;
@@ -464,14 +464,14 @@ class DraggableHeaders extends React.Component {
                     <span
                       style={{
                         fontFamily: '"Courier New", Courier, monospace',
-                        cursor: "col-resize",
+                        cursor: 'col-resize',
                         color: Util.Colors.Blue,
-                        fontWeight: "bold",
-                        fontSize: "20px",
-                        width: "20px",
-                        marginRight: "-5px", // seems about right
+                        fontWeight: 'bold',
+                        fontSize: '20px',
+                        width: '20px',
+                        marginRight: '-5px', // seems about right
                         zIndex: 1,
-                        textAlign: "center",
+                        textAlign: 'center',
                       }}
                     >
                       |

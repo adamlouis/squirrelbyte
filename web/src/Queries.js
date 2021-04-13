@@ -1,49 +1,49 @@
 export const Queries = [
   {
-    name: "top stories",
+    name: 'top stories',
     q: {
-      order_by: [{ desc: { var: "body.score" } }],
+      order_by: [{ desc: { var: 'body.score' } }],
       limit: 1000,
     },
   },
   {
-    name: "top stories of 2021-03-14 or 2021-04-01",
+    name: 'top stories of 2021-03-14 or 2021-04-01',
     q: {
       where: {
         or: [
           {
             and: [
-              { ">=": [{ var: "body.time" }, 1615708800] },
-              { "<": [{ var: "body.time" }, 1615791600] },
+              { '>=': [{ var: 'body.time' }, 1615708800] },
+              { '<': [{ var: 'body.time' }, 1615791600] },
             ],
           },
           {
             and: [
-              { ">=": [{ var: "body.time" }, 1617260400] },
-              { "<": [{ var: "body.time" }, 1617346800] },
+              { '>=': [{ var: 'body.time' }, 1617260400] },
+              { '<': [{ var: 'body.time' }, 1617346800] },
             ],
           },
         ],
       },
-      order_by: [{ desc: { var: "body.score" } }],
+      order_by: [{ desc: { var: 'body.score' } }],
       limit: 1000,
     },
   },
   {
-    name: "top `Show HN` stories",
+    name: 'top `Show HN` stories',
     q: {
       where: {
         like: [
-          "Show HN:%",
+          'Show HN:%',
           {
-            var: "body.title",
+            var: 'body.title',
           },
         ],
       },
       order_by: [
         {
           desc: {
-            var: "body.score",
+            var: 'body.score',
           },
         },
       ],
@@ -51,15 +51,15 @@ export const Queries = [
     },
   },
   {
-    name: "top scoring submitters",
+    name: 'top scoring submitters',
     q: {
       select: [
         {
           as: [
             {
-              var: "body.by",
+              var: 'body.by',
             },
-            "submitter",
+            'submitter',
           ],
         },
         {
@@ -67,11 +67,11 @@ export const Queries = [
             {
               sum: [
                 {
-                  var: "body.score",
+                  var: 'body.score',
                 },
               ],
             },
-            "total_score",
+            'total_score',
           ],
         },
         {
@@ -79,7 +79,7 @@ export const Queries = [
             {
               count: [1],
             },
-            "story_count",
+            'story_count',
           ],
         },
       ],
@@ -88,7 +88,7 @@ export const Queries = [
           desc: {
             sum: [
               {
-                var: "body.score",
+                var: 'body.score',
               },
             ],
           },
@@ -96,38 +96,38 @@ export const Queries = [
       ],
       group_by: [
         {
-          var: "body.by",
+          var: 'body.by',
         },
       ],
       limit: 100,
     },
   },
   {
-    name: "top stories with titles containing rust, golang, or sqlite",
+    name: 'top stories with titles containing rust, golang, or sqlite',
     q: {
       where: {
         or: [
           {
             like: [
-              "%rust%",
+              '%rust%',
               {
-                var: "body.title",
+                var: 'body.title',
               },
             ],
           },
           {
             like: [
-              "%golang%",
+              '%golang%',
               {
-                var: "body.title",
+                var: 'body.title',
               },
             ],
           },
           {
             like: [
-              "%sqlite%",
+              '%sqlite%',
               {
-                var: "body.title",
+                var: 'body.title',
               },
             ],
           },
@@ -136,7 +136,7 @@ export const Queries = [
       order_by: [
         {
           desc: {
-            var: "body.score",
+            var: 'body.score',
           },
         },
       ],
@@ -145,15 +145,15 @@ export const Queries = [
   },
 
   {
-    name: "top stories containing youtube urls",
+    name: 'top stories containing youtube urls',
     q: {
       where: {
         or: [
           {
             like: [
-              "%https://youtube.com%",
+              '%https://youtube.com%',
               {
-                var: "body",
+                var: 'body',
               },
             ],
           },
@@ -162,7 +162,7 @@ export const Queries = [
       order_by: [
         {
           desc: {
-            var: "body.score",
+            var: 'body.score',
           },
         },
       ],
