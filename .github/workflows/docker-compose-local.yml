@@ -10,8 +10,6 @@ jobs:
   docker:
     name: Docker Compose Local
     runs-on: ubuntu-latest
-    # - test `docker compose up`?
-    # - run integration test?
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2  
