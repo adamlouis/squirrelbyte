@@ -1,7 +1,10 @@
 
-![](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-go.yml/badge.svg)
-![](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-js.yml/badge.svg)
-![](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml/badge.svg)
+[![Go Lint](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-go.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-go.yml)
+
+[![JS Lint](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-js.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-js.yml)
+
+[![CodeQL](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml)
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/adamlouis/squirrelbyte)](https://goreportcard.com/report/github.com/adamlouis/squirrelbyte)
 
 
