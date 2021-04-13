@@ -98,7 +98,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer db.Close() // nolint
 
 	fmt.Printf("starting server :%d\n", c.ServerPort)
 	err = server.New().Serve(&server.Opts{

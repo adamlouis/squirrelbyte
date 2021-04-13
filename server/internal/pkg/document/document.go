@@ -13,7 +13,7 @@ type Document struct {
 	UpdatedAt time.Time
 }
 
-type DocumentRepository interface {
+type Repository interface {
 	Init(ctx context.Context) error
 	Put(ctx context.Context, d *Document) (*Document, error)
 	Get(ctx context.Context, documentID string) (*Document, error)

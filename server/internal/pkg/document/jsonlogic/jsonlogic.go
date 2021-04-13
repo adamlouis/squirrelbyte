@@ -1,9 +1,11 @@
 package jsonlogic
 
+// SQLizer converts the provided JSON logic query to a sql expression
 type SQLizer interface {
 	ToSQL(j interface{}) (string, error)
 }
 
+// AllToSQL converts all provided JSON logic queries to sql expressions
 func AllToSQL(s SQLizer, j []interface{}) ([]string, error) {
 	r := make([]string, len(j))
 	for i := range j {

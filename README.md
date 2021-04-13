@@ -1,4 +1,10 @@
-# squirrelbyte 🐿️
+[![server](https://github.com/adamlouis/squirrelbyte/actions/workflows/server.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/server.yml)
+[![web](https://github.com/adamlouis/squirrelbyte/actions/workflows/web.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/web.yml)
+[![CodeQL](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/adamlouis/squirrelbyte)](https://goreportcard.com/report/github.com/adamlouis/squirrelbyte)
+
+
+# squirrelbyte
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite.
 
