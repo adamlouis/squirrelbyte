@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   server:
-    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
