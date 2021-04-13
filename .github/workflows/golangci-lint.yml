@@ -8,6 +8,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
-        working_directory: server
         with:
           version: v1.39.0
+          working-directory: server
