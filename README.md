@@ -1,5 +1,7 @@
 
-![](https://github.com/adamlouis/squirrelbyte/actions/workflows/golangci-lint.yml/badge.svg)
+![](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-go.yml/badge.svg)
+![](https://github.com/adamlouis/squirrelbyte/actions/workflows/lint-js.yml/badge.svg)
+![](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/adamlouis/squirrelbyte)](https://goreportcard.com/report/github.com/adamlouis/squirrelbyte)
 
 
