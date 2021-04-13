@@ -1,0 +1,14 @@
+FROM golang:1.16-alpine
+
+RUN apk add --update make gcc musl-dev
+
+RUN go get github.com/githubnemo/CompileDaemon
+
+WORKDIR /server
+
+ADD . .
+
+# The initial go + sqlite build is slow.
+# Therefore, run the initial build during the container build so that builds
+# in the CompileDaemon command via `docker compose up` may make use of the cache.
+RUN make build

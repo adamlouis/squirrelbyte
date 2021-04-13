@@ -7,7 +7,7 @@ const AbortController = require('abort-controller');
 const fixHeaders = async () => {
     let pt = ''
     while (true) {
-        const q = `http://localhost:8888/api/documents?page_token=${pt}`
+        const q = `http://localhost:9922/api/documents?page_token=${pt}`
         const res = await fetch(q)
         const j = await res.json()
         pt = j.next_page_token
@@ -18,7 +18,7 @@ const fixHeaders = async () => {
                 'hn_url': "https://news.ycombinator.com/item?id=" + d.body.id,
             }
 
-            const r = await await fetch(`http://localhost:8888/api/documents`, {
+            const r = await await fetch(`http://localhost:9922/api/documents`, {
                 method: 'POST',
                 body: JSON.stringify(d),
             })
@@ -48,7 +48,7 @@ const main = async () => {
     while (itemID > toItemID) {
         try {
             const docID = `hn.item.${itemID}`
-            res = await fetch(`http://localhost:8888/api/documents/${docID}`)
+            res = await fetch(`http://localhost:9922/api/documents/${docID}`)
             if (res.status === 200) {
                 itemID -= 1
                 continue
@@ -69,7 +69,7 @@ const main = async () => {
                 process.exit(1)
             }
 
-            res = await fetch(`http://localhost:8888/api/documents`, {
+            res = await fetch(`http://localhost:9922/api/documents`, {
                 method: 'POST',
                 body: JSON.stringify({
                     id: docID,

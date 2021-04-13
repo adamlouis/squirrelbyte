@@ -1,0 +1,31 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.local
+    volumes:
+      - ./server:/server
+    ports:
+      - "9922:9922"
+    environment:
+      - "SQUIRRELBYTE_SERVER_PORT=9922"
+    # CompileDaemon listens for file changes
+    # On file change, it runs `build`, then `command`
+    entrypoint: ["CompileDaemon", "-build", "make build", "-command", "make run-local-no-build", "-graceful-kill", "true"]
+  web:
+    links:
+      - server
+    depends_on:
+      - server
+    build:
+      context: ./web
+      dockerfile: Dockerfile.local
+    volumes:
+      - ./web:/web
+      - /web/node_modules
+    ports:
+      - "9921:9921"
+    environment:
+      - "PORT=9921"
+    # overwrite the `localhost` proxy URL in the package.json with `server`, the name of the server docker container
+    entrypoint: ["/bin/sh", "-c", "sed -i 's/localhost/server/g' package.json; npm run start"]

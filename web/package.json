@@ -11,7 +11,7 @@
         "styled-components": "^5.2.1"
     },
     "scripts": {
-        "start": "PORT=8887 react-scripts start",
+        "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
@@ -40,5 +40,5 @@
         "prettier": "^2.2.1",
         "react-scripts": "4.0.3"
     },
-    "proxy": "http://localhost:8888"
+    "proxy": "http://server:9922"
 }

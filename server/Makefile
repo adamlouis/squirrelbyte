@@ -1,17 +1,16 @@
 test:
 	go test ./...
 
-build:
-	go build --tags "json1" -o bin/server cmd/server/main.go
-
 lint:
 	golangci-lint run
 
-run: build
+build:
+	go build --tags "json1" -o bin/server cmd/server/main.go
+
+run-local-no-build:
 	./bin/server --dotenv .env.local
 
-run-ro: build
-	./bin/server --dotenv .env.local.ro
+run-local: build run-local-no-build
 
-run-get-hn-now:
-	go run scripts/get-hn-now/main.go
+run-local-ro: build
+	./bin/server --dotenv .env.local.ro

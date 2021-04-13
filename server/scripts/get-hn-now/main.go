@@ -59,7 +59,7 @@ func loadItems(ids []int) error {
 			return err
 		}
 
-		createResp, err := http.Post("http://localhost:8888/api/documents", "application/json", reqBuf)
+		createResp, err := http.Post("http://localhost:9922/api/documents", "application/json", reqBuf)
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func loadList(url string) error {
 }
 
 func main() {
-	_, err := http.Get("http://localhost:8888/api/status")
+	_, err := http.Get("http://localhost:9922/api/status")
 	if err != nil {
 		log.Fatal(err)
 	}

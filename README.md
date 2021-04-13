@@ -7,6 +7,10 @@ See a discussion on [Hacker News](https://news.ycombinator.com/item?id=26766557)
 
 ## how to run
 
+Run `squirrelbyte` locally in development mode with `docker-compose up`.
+
+TODO: more here
+
 ## code overview
 
 There are 2 main components of `squirrelbyte` represented as top-level directories in the project: `server` and `web`

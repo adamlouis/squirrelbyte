@@ -24,6 +24,8 @@ const (
 	_envStaticDir              = "SQUIRRELBYTE_STATIC_DIR"
 	_envAllowedHTTPMethods     = "SQUIRRELBYTE_ALLOWED_HTTP_METHODS"
 	_envAllowedHTTPPaths       = "SQUIRRELBYTE_ALLOWED_HTTP_PATHS"
+
+	defaultServerPort = 9922
 )
 
 type config struct {
@@ -42,28 +44,33 @@ func newConfig() (*config, error) {
 		}
 	}
 
-	serverPort, err := strconv.Atoi(os.Getenv(_envServerPort))
-	if err != nil {
-		return nil, err
+	serverPort := defaultServerPort
+	pstr := os.Getenv(_envServerPort)
+	if pstr != "" {
+		p, err := strconv.Atoi(pstr)
+		if err != nil {
+			return nil, err
+		}
+		serverPort = p
 	}
 
-	ms := strings.Split(os.Getenv(_envAllowedHTTPMethods), ",")
-	am := map[string]bool{}
-	for _, m := range ms {
-		am[m] = true
+	methods := strings.Split(os.Getenv(_envAllowedHTTPMethods), ",")
+	allowedMethods := map[string]bool{}
+	for _, m := range methods {
+		allowedMethods[m] = true
 	}
-	ps := strings.Split(os.Getenv(_envAllowedHTTPPaths), ",")
-	ap := map[string]bool{}
-	for _, p := range ps {
-		ap[p] = true
+	paths := strings.Split(os.Getenv(_envAllowedHTTPPaths), ",")
+	allowedPaths := map[string]bool{}
+	for _, p := range paths {
+		allowedPaths[p] = true
 	}
 
 	return &config{
 		ServerPort:         serverPort,
 		SQLite3Path:        os.Getenv(_envSQLiteConnectionString),
 		StaticDir:          os.Getenv(_envStaticDir),
-		AllowedHTTPMethods: am,
-		AllowedHTTPPaths:   ap,
+		AllowedHTTPMethods: allowedMethods,
+		AllowedHTTPPaths:   allowedPaths,
 	}, nil
 }
 
