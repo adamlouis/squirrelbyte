@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import _ from 'lodash';
 import styled from 'styled-components';
 import { DocumentList } from './DocumentList';
@@ -6,8 +6,9 @@ import Util from './Util';
 import { Loader } from './Loader';
 
 import { Header } from './components/Header';
-import { InfoHeader } from './components/InfoHeader';
+import { InfoBox } from './components/InfoBox';
 import { JSONQueryForm } from './components/JSONQueryForm';
+import { getQueryFromURL } from './utils/Browser';
 
 const TABS = {
   result: { name: 'result' },
@@ -56,15 +57,6 @@ const QueryView = styled.pre`
   border-radius: 3px;
 `;
 
-// hand pick for demo
-const defaultQuery = {
-  select: [],
-  where: {},
-  group_by: [],
-  order_by: [],
-  limit: 1000,
-};
-
 const getEmptyResult = () => ({
   query: '',
   documents: undefined,
@@ -73,85 +65,14 @@ const getEmptyResult = () => ({
   error: '',
 });
 
-const getQueryFromURL = () => {
-  try {
-    const q = Util.getUrlParameter('q');
-    if (!q) {
-      Util.clearURLParameters();
-      return;
-    }
-
-    const j = JSON.parse(q);
-
-    if (!_.isObject(j)) {
-      Util.clearURLParameters();
-      return;
-    }
-
-    return JSON.stringify(j, undefined, 2);
-  } catch (e) {
-    console.warn(e);
-    Util.clearURLParameters();
-  }
-};
-
-const queryFromUrl = getQueryFromURL();
-
 function App() {
-  const [query, setQuery] = useState(
-    queryFromUrl || JSON.stringify(defaultQuery, undefined, 2)
-  );
   const [result, setResult] = useState(getEmptyResult());
   const [selectedTab, setSelectedTab] = useState('result');
   const [loading, setLoading] = useState(false);
 
+  const queryFromURLRef = useRef(getQueryFromURL());
+
   const onClickTab = (t) => setSelectedTab(t);
-  const onSubmitForm = async (e) => {
-    e.preventDefault();
-    submitForm();
-  };
-
-  const submitForm = useCallback(async () => {
-    setLoading(true);
-    setResult(getEmptyResult());
-
-    const submittedQuery = query;
-    try {
-      const start = performance.now();
-      const res = await fetch('/api/documents:search', {
-        method: 'POST',
-        body: submittedQuery,
-        json: true,
-      });
-      const elapsed = performance.now() - start;
-
-      const j = await res.json();
-
-      setResult({
-        query: submittedQuery,
-        documents: j.result,
-        paths: Util.getAllPaths(j.result),
-        insights: j.insights,
-        error: j.message,
-        elapsed,
-      });
-
-      try {
-        Util.setUrlParameter('q', JSON.stringify(JSON.parse(submittedQuery)));
-      } catch (e) {
-        console.warn(e);
-      }
-    } catch (e) {
-      setResult({
-        query: submittedQuery,
-        paths: [],
-        documents: [],
-        insights: {},
-        error: `${e}`,
-      });
-    }
-    setLoading(false);
-  }, [setLoading, setResult, query]);
 
   const runDocumentQuery = useCallback(
     async (q) => {
@@ -199,8 +120,8 @@ function App() {
   );
 
   useEffect(() => {
-    if (queryFromUrl) {
-      submitForm();
+    if (queryFromURLRef.current) {
+      runDocumentQuery(queryFromURLRef.current);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -232,8 +153,11 @@ function App() {
     <div>
       <Header />
       <Body>
-        <InfoHeader />
-        <JSONQueryForm onSubmit={onSubmitJSONQueryForm} />
+        <InfoBox />
+        <JSONQueryForm
+          initialValue={queryFromURLRef.current}
+          onSubmit={onSubmitJSONQueryForm}
+        />
         <div>
           <div style={{ minHeight: '750px' }}>
             {loading && (

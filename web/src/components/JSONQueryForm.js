@@ -18,6 +18,18 @@ const ButtonRow = styled.div`
   width: 100%;
 `;
 
+const defaultQuery = JSON.stringify(
+  {
+    select: [],
+    where: {},
+    group_by: [],
+    order_by: [],
+    limit: 1000,
+  },
+  undefined,
+  2
+);
+
 export function JSONQueryForm(props) {
   const [query, setQuery] = useState('');
 
@@ -40,7 +52,7 @@ export function JSONQueryForm(props) {
   return (
     <Container onSubmit={onSubmitForm}>
       <CodeEditor
-        initialValue={''}
+        initialValue={props.initialValue || defaultQuery}
         height={'400px'}
         width={'100%'}
         onChange={setQuery}

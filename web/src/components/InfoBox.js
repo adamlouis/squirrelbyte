@@ -49,7 +49,7 @@ const Clicker = styled.div`
   }
 `;
 
-export function InfoHeader(props) {
+export function InfoBox(props) {
   const [headerMD, setHeaderMD] = useState('');
   const [bodyMD, setBodyMD] = useState('');
   const [showBody, setShowBody] = useState(false);
