@@ -1,5 +1,5 @@
 
-## why
+# why
 
 I like to explore & understand data from the software services I use - Strava, Garmin, GitHub, AWS, & some others.
 
@@ -21,11 +21,11 @@ The web application here is a first step towards these goals -- a document / sea
 
 What's here is minimal, but could become more.
 
-## what
+# what
 
 `squirrelbyte` is a "proof of concept" document / search server backed by sqlite. JSON documents are stashed in sqlite using the [sqlite json1 extension](https://www.sqlite.org/json1.html). It supports a query syntax similar to [jsonlogic](https://jsonlogic.com/), which I basically use as a (restricted) AST for a SQL query. The server is written in golang.
 
-## the name
+# the name
 
 It's kind of fun ... "sql" is a subsequence of "squirrel" ... "squirrel" means "to store up for future use" ... & that's what we're doing with our bytes ... the domain name was available
 

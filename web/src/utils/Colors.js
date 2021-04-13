@@ -7,4 +7,6 @@ export const Colors = {
   GrayC: '#ccc',
   Black: '#000',
   White: '#fff',
+  GithubGreen: '#2ea44f',
+  GithubDarkerGreen: '#25833f',
 };

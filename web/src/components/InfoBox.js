@@ -15,13 +15,13 @@ const Container = styled.div`
   font-size: 14px;
 
   h1 {
-    font-size: 18px;
-  }
-  h2 {
     font-size: 16px;
   }
-  h3 {
+  h2 {
     font-size: 14px;
+  }
+  h3 {
+    font-size: 12px;
   }
 `;
 
@@ -30,7 +30,7 @@ const Content = styled.div`
 `;
 
 const IndentButton = styled(Button)`
-  margin: 15px 20px 10px 0px;
+  margin: 10px 20px 10px 0px;
 `;
 
 const Row = styled.div`
@@ -49,11 +49,12 @@ const Clicker = styled.div`
   }
 `;
 
-export function InfoBox(props) {
+export function InfoBox() {
   const [headerMD, setHeaderMD] = useState('');
   const [bodyMD, setBodyMD] = useState('');
   const [showBody, setShowBody] = useState(false);
 
+  // TODO: store info markdown server side & system table after I implement multi db / multi table
   useEffect(() => {
     (async () => {
       try {
