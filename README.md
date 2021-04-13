@@ -1,4 +1,6 @@
-https://github.com/adamlouis/squirrelbyte/actions/workflows/golangci-lint.yml/badge.svg
+
+![example workflow](https://github.com/adamlouis/squirrelbyte/actions/workflows/golangci-lint.yml/badge.svg)
+
 
 # squirrelbyte 🐿️
 
