@@ -1,4 +1,4 @@
-name: JS Lint
+name: web
 
 on: [push, pull_request]
 
