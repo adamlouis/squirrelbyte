@@ -10,10 +10,10 @@ jobs:
       uses: actions/checkout@v2
     - name: Install modules
       run: npm install
-      working_directory: web
+      working-directory: web
     - name: Run lint
       run: npm run lint
-      working_directory: web
+      working-directory: web
     - name: Run pretty
       run: npm run pretty
-      working_directory: web
+      working-directory: web
