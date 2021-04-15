@@ -31,7 +31,8 @@ const defaultQuery = JSON.stringify(
 );
 
 export function JSONQueryForm(props) {
-  const [query, setQuery] = useState('');
+  const initialValue = props.initialValue || defaultQuery;
+  const [query, setQuery] = useState(initialValue);
 
   const propsOnSubmit = props.onSubmit;
 
@@ -52,7 +53,7 @@ export function JSONQueryForm(props) {
   return (
     <Container onSubmit={onSubmitForm}>
       <CodeEditor
-        initialValue={props.initialValue || defaultQuery}
+        initialValue={initialValue}
         height={'400px'}
         width={'100%'}
         onChange={setQuery}

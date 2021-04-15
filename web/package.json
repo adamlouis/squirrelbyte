@@ -42,5 +42,5 @@
         "prettier": "^2.2.1",
         "react-scripts": "4.0.3"
     },
-    "proxy": "http://server:9922"
+    "proxy": "http://localhost:9922"
 }

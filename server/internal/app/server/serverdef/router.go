@@ -18,5 +18,5 @@ func RegisterRouter(a APIHandler, r *mux.Router) {
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.GetDocument)).Methods(http.MethodGet)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.PutDocument)).Methods(http.MethodPut)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.DeleteDocument)).Methods(http.MethodDelete)
-	r.Handle("/documents:search", http.HandlerFunc(h.SearchDocuments)).Methods(http.MethodPost)
+	r.Handle("/documents:query", http.HandlerFunc(h.SearchDocuments)).Methods(http.MethodPost)
 }

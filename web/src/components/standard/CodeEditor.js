@@ -24,6 +24,7 @@ export function CodeEditor(props) {
     editor.session.setMode('ace/mode/json');
     editor.setTheme('ace/theme/eclipse');
     editor.setValue(props.initialValue || '');
+    editor.setShowPrintMargin(false);
     editor.clearSelection();
     editor.on('change', (e) => {
       props.onChange(editor.getValue());

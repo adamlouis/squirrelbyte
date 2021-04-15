@@ -1,7 +1,8 @@
 import styled from 'styled-components';
-import { Colors } from '../../constants/Colors';
+import { Colors } from '../../utils/Colors';
 
 const Banner = styled.div`
+  width: 100%;
   padding: 3px 8px;
 `;
 
