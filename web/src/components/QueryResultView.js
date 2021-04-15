@@ -86,11 +86,6 @@ const getDefaultSelectedPaths = (paths) => {
     return prefs;
   }
 
-  console.log(
-    _.uniq(
-      _.compact(_.concat(intersection(['id', 'body', 'header'], paths), paths))
-    )
-  );
   // if none match, select the 1st 4, prefering the default top-level fields of the document resource
   return _.slice(
     _.uniq(
@@ -121,6 +116,8 @@ export function QueryResultView(props) {
     later(() => setPathSelectionPreferences(paths));
   };
 
+  const documents = _.get(props, 'queryResult.response.result');
+
   return (
     <Container>
       <Banner queryResult={props.queryResult} />
@@ -141,15 +138,17 @@ export function QueryResultView(props) {
         </QueryView>
       </TabContent>
       <TabContent show={selectedTab === 'result'}>
-        <JSONPathSelector
-          paths={paths}
-          initialSelectedPaths={selectedPaths}
-          onChange={onChangeSelectedPaths}
-        />
-        <JSONGrid
-          documents={_.get(props, 'queryResult.response.result')}
-          paths={selectedPaths}
-        />
+        {_.isEmpty(documents) && <div>no results</div>}
+        {!_.isEmpty(documents) && (
+          <JSONPathSelector
+            paths={paths}
+            initialSelectedPaths={selectedPaths}
+            onChange={onChangeSelectedPaths}
+          />
+        )}
+        {!_.isEmpty(documents) && (
+          <JSONGrid documents={documents} paths={selectedPaths} />
+        )}
       </TabContent>
     </Container>
   );

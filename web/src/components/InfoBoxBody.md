@@ -1,13 +1,8 @@
-# why
+## about
 
 I like to explore & understand data from the software services I use - Strava, Garmin, GitHub, AWS, & some others.
 
-Some tools I like for exploring data in general are:
-
-- [Datasette](https://datasette.io/) - for exploring sqlite databases
-- [jq](https://stedolan.github.io/jq/) - for sifting through local json files
-- [Honeycomb](https://www.honeycomb.io/overview/) - for general observability of distributed systems ... but in this case, for the query UI & how it works nicely for high cardinality data.
-- [Grafana](https://grafana.com/) / [ElasticSearch + Kibana](https://www.elastic.co/demos) - for general dashboard building, data ingestion, etc.
+`squirrelbyte` is a "proof of concept" personal hobby project that lets me do that.
 
 For my usecase, I wanted a way to:
 
@@ -16,14 +11,27 @@ For my usecase, I wanted a way to:
 - Keep costs & infrastructure complexity low
 - Self-host it / own my data
 
-The web application here is a first step towards these goals -- a document / search server & UI, drawing inspiration from tools that I like.
+
+The application here is a first step towards these goals -- a document / search server & UI.
+
+It draws inspiration from some of the tools that I like:
+
+- [Datasette](https://datasette.io/) - for exploring sqlite databases
+- [jq](https://stedolan.github.io/jq/) - for sifting through local json files
+- [Honeycomb](https://www.honeycomb.io/overview/) - for general observability of distributed systems ... but in this case, for the query UI & how it works nicely for high cardinality data.
+- [Grafana](https://grafana.com/) / [ElasticSearch + Kibana](https://www.elastic.co/demos) - for general dashboard building, data ingestion, etc.
 
 What's here is minimal, but could become more.
 
-# what
+## implementation brief
 
-`squirrelbyte` is a "proof of concept" document / search server backed by sqlite. JSON documents are stashed in sqlite using the [sqlite json1 extension](https://www.sqlite.org/json1.html). It supports a query syntax similar to [jsonlogic](https://jsonlogic.com/), which I basically use as a (restricted) AST for a SQL query. The server is written in golang.
+There are currently 2 components of `squirrelbyte` - a web application and a server.
 
-# the name
+The web application is written in react and interacts with the server.
 
-It's kind of fun ... "sql" is a subsequence of "squirrel" ... "squirrel" means "to store up for future use" ... & that's what we're doing with our bytes ... the domain name was available
+The server is written and golang & manages CRUD & querying. It stashes JSON documents in sqlite using the [sqlite json1 extension](https://www.sqlite.org/json1.html) and supports a query syntax similar to [jsonlogic](https://jsonlogic.com/). `jsonlogic` is essentially used as a restricted AST for a SQL query.
+
+## some links
+
+- see the initial Hacker News post: [Show HN: Squirrelbyte – a SQLite-based JSON document server](https://news.ycombinator.com/item?id=26766557)
+- see the source on GitHub: [`github.com/adamlouis/squirrelbyte`](https://github.com/adamlouis/squirrelbyte)
