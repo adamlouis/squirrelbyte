@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Loader } from './Loader';
+import { Loader } from './components/standard/Loader';
 
 import { Header } from './components/Header';
 import { InfoBox } from './components/InfoBox';

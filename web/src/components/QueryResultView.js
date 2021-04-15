@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import _ from 'lodash';
 import styled from 'styled-components';
 import { SuccessBanner, ErrorBanner } from './standard/Banner';
-import { safePretty } from '../utils/JSON';
+import { safePretty, getAllPaths } from '../utils/JSON';
 import { Colors } from '../utils/Colors';
 import { JSONGrid } from './JSONGrid';
+import { JSONPathSelector } from './JSONPathSelector';
 
 const TABS = {
   result: { name: 'result' },
@@ -45,8 +46,8 @@ const Tab = styled.div`
   }
 `;
 
-const TabContent = styled.pre`
-  display: flex;
+const TabContent = styled.div`
+  display: ${(p) => (p.show ? 'flex' : 'none')};
 `;
 const QueryView = styled.pre`
   background-color: ${Colors.GrayD};
@@ -55,9 +56,70 @@ const QueryView = styled.pre`
   margin: 0px;
 `;
 
+const getAllPathsMemoized = _.memoize(getAllPaths);
+
+const setPathSelectionPreferences = (paths) => {
+  try {
+    localStorage.setItem('preferences-selected-paths', JSON.stringify(paths));
+  } catch (e) {
+    console.warn(e);
+  }
+};
+
+const getPathSelectionPreferences = () => {
+  try {
+    return JSON.parse(localStorage.getItem('preferences-selected-paths'));
+  } catch (e) {
+    console.warn(e);
+  }
+};
+
+const intersection = (a, b) => {
+  const sb = new Set(b);
+  return _.filter(a, (e) => sb.has(e));
+};
+
+const getDefaultSelectedPaths = (paths) => {
+  // select previously selected, if any of the columns present in the new query
+  const prefs = intersection(getPathSelectionPreferences() || [], paths);
+  if (_.size(prefs) !== 0) {
+    return prefs;
+  }
+
+  console.log(
+    _.uniq(
+      _.compact(_.concat(intersection(['id', 'body', 'header'], paths), paths))
+    )
+  );
+  // if none match, select the 1st 4, prefering the default top-level fields of the document resource
+  return _.slice(
+    _.uniq(
+      _.compact(_.concat(intersection(['id', 'body', 'header'], paths), paths))
+    ),
+    0,
+    4
+  );
+};
+
+const later = async (fn) => fn();
+
 export function QueryResultView(props) {
   const [selectedTab, setSelectedTab] = useState('result');
+
+  const paths = getAllPathsMemoized(
+    _.get(props, 'queryResult.response.result')
+  );
+
+  const [selectedPaths, setSelectedPaths] = useState(
+    getDefaultSelectedPaths(paths)
+  );
+
   const onClickTab = (t) => setSelectedTab(t);
+
+  const onChangeSelectedPaths = (paths) => {
+    setSelectedPaths(paths);
+    later(() => setPathSelectionPreferences(paths));
+  };
 
   return (
     <Container>
@@ -73,16 +135,22 @@ export function QueryResultView(props) {
           </Tab>
         ))}
       </TabRow>
-      <TabContent>
-        {selectedTab === 'query' && (
-          <QueryView>
-            {safePretty(_.get(props, 'queryResult.metadata.query'))}
-          </QueryView>
-        )}
+      <TabContent show={selectedTab === 'query'}>
+        <QueryView>
+          {safePretty(_.get(props, 'queryResult.metadata.query'))}
+        </QueryView>
       </TabContent>
-      {selectedTab === 'result' && (
-        <JSONGrid documents={_.get(props, 'queryResult.response.result')} />
-      )}
+      <TabContent show={selectedTab === 'result'}>
+        <JSONPathSelector
+          paths={paths}
+          initialSelectedPaths={selectedPaths}
+          onChange={onChangeSelectedPaths}
+        />
+        <JSONGrid
+          documents={_.get(props, 'queryResult.response.result')}
+          paths={selectedPaths}
+        />
+      </TabContent>
     </Container>
   );
 }

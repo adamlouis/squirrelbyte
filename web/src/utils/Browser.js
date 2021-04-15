@@ -1,3 +1,15 @@
+export function isValidHttpUrl(s) {
+  let url;
+
+  try {
+    url = new URL(s);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === 'http:' || url.protocol === 'https:';
+}
+
 // https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 export function getURLQueryParameter(name, url = window.location.href) {
   name = name.replace(/[[\]]/g, '\\$&');

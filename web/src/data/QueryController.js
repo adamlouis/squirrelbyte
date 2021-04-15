@@ -28,7 +28,14 @@ export const runQuery = async (query) => {
     });
     queryResult.metadata.durationMs = performance.now() - start;
     queryResult.metadata.status = res.status;
-    queryResult.response = await res.json();
+
+    const resTxt = res.clone();
+    try {
+      queryResult.response = await res.json();
+    } catch (e) {
+      // if parsing response as json fails, parse as text
+      throw new Error(await resTxt.text());
+    }
 
     // side effect: set URL query param
     try {

@@ -1,4 +1,3 @@
-
 # why
 
 I like to explore & understand data from the software services I use - Strava, Garmin, GitHub, AWS, & some others.
@@ -28,4 +27,3 @@ What's here is minimal, but could become more.
 # the name
 
 It's kind of fun ... "sql" is a subsequence of "squirrel" ... "squirrel" means "to store up for future use" ... & that's what we're doing with our bytes ... the domain name was available
-
