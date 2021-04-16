@@ -7,11 +7,12 @@
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "react-draggable": "^4.4.3",
+        "react-markdown": "^6.0.0",
         "react-virtualized": "^9.22.3",
         "styled-components": "^5.2.1"
     },
     "scripts": {
-        "start": "react-scripts start",
+        "start": "PORT=9921 react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
@@ -42,5 +43,5 @@
         "prettier": "^2.2.1",
         "react-scripts": "4.0.3"
     },
-    "proxy": "http://server:9922"
+    "proxy": "http://localhost:9922"
 }

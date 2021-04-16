@@ -1,6 +1,6 @@
 [![server](https://github.com/adamlouis/squirrelbyte/actions/workflows/server.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/server.yml)
 [![web](https://github.com/adamlouis/squirrelbyte/actions/workflows/web.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/web.yml)
-[![CodeQL](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/codeql.yml)
+[![docker compose local](https://github.com/adamlouis/squirrelbyte/actions/workflows/docker-compose-local.yml/badge.svg)](https://github.com/adamlouis/squirrelbyte/actions/workflows/docker-compose-local.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/adamlouis/squirrelbyte)](https://goreportcard.com/report/github.com/adamlouis/squirrelbyte)
 
 
@@ -38,7 +38,7 @@ POST   /documents
 GET    /documents/{documentID}
 PUT    /documents/{documentID}
 DELETE /documents/{documentID}
-POST   /documents:search
+POST   /documents:query
 ```
 
 Where a `document` resource is:
@@ -53,7 +53,7 @@ Where a `document` resource is:
 }
 ```
 
-The search endpoint, `POST /documents:search`, supports a query sytax based on 1) SQL and 2) [jsonlogic](https://jsonlogic.com/). The POST body takes the form:
+The search endpoint, `POST /documents:query`, supports a query sytax based on 1) SQL and 2) [jsonlogic](https://jsonlogic.com/). The POST body takes the form:
 
 ```
 {

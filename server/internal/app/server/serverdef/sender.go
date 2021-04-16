@@ -7,6 +7,7 @@ import (
 
 // TODO: generate all of `serverdef` package from conf / openapi declaration
 
+// SendError sends an error response
 func SendError(w http.ResponseWriter, err error) {
 	w.Header().Add("Content-Type", "application/json")
 
@@ -21,6 +22,7 @@ func SendError(w http.ResponseWriter, err error) {
 	})
 }
 
+// SendOK sends an success response
 func SendOK(w http.ResponseWriter, body interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

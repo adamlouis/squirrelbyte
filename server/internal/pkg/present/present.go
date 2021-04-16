@@ -12,6 +12,7 @@ import (
 // seems like overkill with just one resource
 // yagni?
 
+// APIDocumentToInternalDocument returns the API representation of document form the internal representation
 func APIDocumentToInternalDocument(d *serverdef.Document) (*document.Document, error) {
 	if d == nil {
 		return nil, nil
@@ -34,6 +35,7 @@ func APIDocumentToInternalDocument(d *serverdef.Document) (*document.Document, e
 	}, nil
 }
 
+// InternalDocumentToAPIDocument returns the internal representation of a document from the API representation
 func InternalDocumentToAPIDocument(d *document.Document) (*serverdef.Document, error) {
 	if d == nil {
 		return nil, nil
@@ -60,6 +62,7 @@ func InternalDocumentToAPIDocument(d *document.Document) (*serverdef.Document, e
 	}, nil
 }
 
+// InternalDocumentsToAPIDocuments returns the internal representation of documents from the API representation
 func InternalDocumentsToAPIDocuments(ds []*document.Document) ([]*serverdef.Document, error) {
 	if ds == nil {
 		return nil, nil
@@ -76,6 +79,7 @@ func InternalDocumentsToAPIDocuments(ds []*document.Document) ([]*serverdef.Docu
 	return r, nil
 }
 
+// ToAPITime returns an RFC3339 time from a golangtim
 func ToAPITime(t time.Time) string {
 	return t.Format(time.RFC3339)
 }

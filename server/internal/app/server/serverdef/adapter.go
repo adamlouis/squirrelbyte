@@ -119,13 +119,13 @@ func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
 	}
 	SendOK(w, struct{}{})
 }
-func (h *httpHandler) SearchDocuments(w http.ResponseWriter, req *http.Request) {
-	var b SearchDocumentsRequest
+func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
+	var b QueryDocumentsRequest
 	if err := json.NewDecoder(req.Body).Decode(&b); err != nil {
 		SendError(w, err)
 		return
 	}
-	r, err := h.a.SearchDocuments(req.Context(), &b)
+	r, err := h.a.QueryDocuments(req.Context(), &b)
 	if err != nil {
 		SendError(w, err)
 		return

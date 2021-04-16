@@ -56,6 +56,7 @@ var (
 	sqlAsNameRegexp    = regexp.MustCompile(sqlAsRegexpLiteral)
 )
 
+// NewSQLizer returns a jsonlogic.SQLizer that accepts jsonlogic and returns sql
 func NewSQLizer() jsonlogic.SQLizer {
 	return &sqlizer{}
 }

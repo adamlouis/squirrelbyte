@@ -1,8 +1,8 @@
-import _ from "lodash";
+import _ from 'lodash';
 
 let subscribers = {};
 
-document.addEventListener("keydown", (e) =>
+document.addEventListener('keydown', (e) =>
   _.forEach(subscribers[`${e.code}.${e.metaKey}`], (f) => f())
 );
 
