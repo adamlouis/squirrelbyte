@@ -1,0 +1,17 @@
+name: Docker Compose Local
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    name: Docker Compose Local
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  
+      - name: Build the stack
+        run: docker-compose build

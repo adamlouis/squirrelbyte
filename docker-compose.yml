@@ -27,5 +27,4 @@ services:
       - "9921:9921"
     environment:
       - "PORT=9921"
-    # overwrite the `localhost` proxy URL in the package.json with `server`, the name of the server docker container
-    entrypoint: ["/bin/sh", "-c", "sed -i 's/localhost/server/g' package.json; npm run start"]
+    entrypoint: ["npm", "run", "start"]
