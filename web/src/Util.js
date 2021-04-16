@@ -213,7 +213,7 @@ function updateURLParameter(url, param, paramVal) {
     }
   }
 
-  var encodedParamVal = encodeURIComponent(paramVal)
+  var encodedParamVal = encodeURIComponent(paramVal);
   var rows_txt = temp + "" + param + "=" + encodedParamVal;
   return baseURL + "?" + newAdditionalURL + rows_txt;
 }

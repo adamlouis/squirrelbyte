@@ -29,7 +29,7 @@ type apiHandler struct {
 }
 
 type Repositories struct {
-	Document document.DocumentRepository
+	Document document.Repository
 	Commit   func() error
 	Rollback func() error
 }

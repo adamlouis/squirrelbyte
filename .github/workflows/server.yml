@@ -1,0 +1,25 @@
+name: server
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  
+      - name: Run `golangci-lint`
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.39.0
+          working-directory: server
+      - name: Run tests
+        run: make test
+        working-directory: server
+      - name: Run build
+        run: make build
+        working-directory: server

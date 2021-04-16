@@ -24,7 +24,7 @@ const (
 	maxPageSize    = uint64(1000)
 )
 
-func NewDocumentRepository(db sqlx.Ext) document.DocumentRepository {
+func NewDocumentRepository(db sqlx.Ext) document.Repository {
 	return &documentRepo{
 		db: db,
 	}
@@ -236,7 +236,7 @@ func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQ
 
 	selection := []string{"id", "body", "header", "created_at", "updated_at"}
 	// use the json string as the column name in the result
-	// it will get overriden if `as` clause is provided
+	// it will get overridden if `as` clause is provided
 	// no special handling for collisions between names or names & raw
 	rawColumnNamesBySelectName := map[string]string{}
 	if len(s) > 0 {

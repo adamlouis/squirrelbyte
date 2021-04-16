@@ -1,0 +1,29 @@
+name: web
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Install modules
+      run: npm install
+      working-directory: web
+    - name: Run lint
+      run: npm run lint
+      working-directory: web
+    - name: Run pretty
+      run: npm run pretty
+      working-directory: web
+    - name: Run tests
+      run: npm run test
+      working-directory: web
+    - name: Run build
+      run: npm run build
+      working-directory: web
