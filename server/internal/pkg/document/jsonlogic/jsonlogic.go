@@ -18,8 +18,10 @@ func AllToSQL(s SQLizer, j []interface{}) ([]string, error) {
 	return r, nil
 }
 
+// Operator is a jsonlogic query operator
 type Operator string
 
+//nolint:golint
 const (
 	// binary infix
 	OperatorAdd                Operator = "+"

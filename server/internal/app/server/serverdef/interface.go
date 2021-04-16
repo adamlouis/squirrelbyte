@@ -15,7 +15,7 @@ type HTTPAPIHandler interface {
 	GetDocument(w http.ResponseWriter, req *http.Request)
 	PutDocument(w http.ResponseWriter, req *http.Request)
 	DeleteDocument(w http.ResponseWriter, req *http.Request)
-	SearchDocuments(w http.ResponseWriter, req *http.Request)
+	QueryDocuments(w http.ResponseWriter, req *http.Request)
 }
 
 // APIHandler is an implementation of the API using typed golang structs
@@ -26,5 +26,5 @@ type APIHandler interface {
 	GetDocument(ctx context.Context, pathParams *GetDocumentPathParams) (*Document, error)
 	PutDocument(ctx context.Context, pathParams *PutDocumentPathParams, document *Document) (*Document, error)
 	DeleteDocument(ctx context.Context, pathParams *DeleteDocumentPathParams) error
-	SearchDocuments(ctx context.Context, body *SearchDocumentsRequest) (*SearchDocumentsResponse, error)
+	QueryDocuments(ctx context.Context, body *QueryDocumentsRequest) (*QueryDocumentsResponse, error)
 }

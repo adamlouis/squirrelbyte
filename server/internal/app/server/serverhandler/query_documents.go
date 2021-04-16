@@ -8,7 +8,7 @@ import (
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document"
 )
 
-func (a *apiHandler) SearchDocuments(ctx context.Context, body *serverdef.SearchDocumentsRequest) (*serverdef.SearchDocumentsResponse, error) {
+func (a *apiHandler) QueryDocuments(ctx context.Context, body *serverdef.QueryDocumentsRequest) (*serverdef.QueryDocumentsResponse, error) {
 	start := time.Now()
 	repos, err := a.GetRepositories()
 	if err != nil {
@@ -16,7 +16,7 @@ func (a *apiHandler) SearchDocuments(ctx context.Context, body *serverdef.Search
 	}
 	defer repos.Rollback() //nolint
 
-	r, err := repos.Document.Search(ctx, &document.SearchDocumentsQuery{
+	r, err := repos.Document.Query(ctx, &document.Query{
 		Select:    body.Select,
 		Where:     body.Where,
 		GroupBy:   body.GroupBy,
@@ -28,7 +28,7 @@ func (a *apiHandler) SearchDocuments(ctx context.Context, body *serverdef.Search
 		return nil, err
 	}
 
-	return &serverdef.SearchDocumentsResponse{
+	return &serverdef.QueryDocumentsResponse{
 		Result:        r.Result,
 		NextPageToken: r.NextPageToken,
 		Insights: map[string]interface{}{

@@ -24,6 +24,7 @@ const (
 	maxPageSize    = uint64(1000)
 )
 
+// NewDocumentRepository returns a new document repository
 func NewDocumentRepository(db sqlx.Ext) document.Repository {
 	return &documentRepo{
 		db: db,
@@ -217,7 +218,7 @@ func docRowToDoc(r *documentRow) (*document.Document, error) {
 
 // warning: search DOES NOT use prepared statements in order to allow more expressive queries. only use in read-only mode.
 // todo: add code-level guard rails to restrict to read-only or other safe contexts
-func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQuery) (*document.SearchDocumentsResult, error) {
+func (dr *documentRepo) Query(ctx context.Context, q *document.Query) (*document.QueryResult, error) {
 	sz := maxPageSize
 	if q.Limit > 0 {
 		sz = uint64(q.Limit)
@@ -279,7 +280,7 @@ func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQ
 
 	offset := uint64(0)
 	if q.PageToken != "" {
-		page := &searchDocumentsPageData{}
+		page := &queryDocumentsPageData{}
 		err = decodePageData(q.PageToken, page)
 		if err != nil {
 			return nil, err
@@ -335,7 +336,7 @@ func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQ
 	nextPageToken := ""
 	if len(result) > int(sz) {
 		result = result[0 : len(result)-1]
-		s, err := encodePageData(&searchDocumentsPageData{
+		s, err := encodePageData(&queryDocumentsPageData{
 			Offset: offset + uint64(len(result)),
 		})
 		if err != nil {
@@ -344,7 +345,7 @@ func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQ
 		nextPageToken = s
 	}
 
-	return &document.SearchDocumentsResult{
+	return &document.QueryResult{
 		Result: result,
 		PageResult: document.PageResult{
 			NextPageToken: nextPageToken,
@@ -352,7 +353,7 @@ func (dr *documentRepo) Search(ctx context.Context, q *document.SearchDocumentsQ
 	}, nil
 }
 
-type searchDocumentsPageData struct {
+type queryDocumentsPageData struct {
 	Offset uint64 `json:"offset"`
 	// NextID string `json:"next_id"` // TODO: for perf, use id as page cursor if no order by clause is provided
 }

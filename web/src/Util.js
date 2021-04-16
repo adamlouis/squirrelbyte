@@ -1,9 +1,9 @@
-import _ from "lodash";
+import _ from 'lodash';
 
 const Colors = {
-  Green: "#55efc4",
-  Yellow: "#fcf9d7",
-  Blue: "#74b9ff",
+  Green: '#55efc4',
+  Yellow: '#fcf9d7',
+  Blue: '#74b9ff',
 };
 
 const safePretty = (o) => {
@@ -15,7 +15,7 @@ const safePretty = (o) => {
 
 const getAllPaths = (docs) => {
   const result = new Set();
-  _.forEach(docs, (d) => getPathsRec(d, "", result));
+  _.forEach(docs, (d) => getPathsRec(d, '', result));
   return _.sortBy(Array.from(result));
 };
 
@@ -31,7 +31,7 @@ const getPathsRec = (obj, currentPath, result) => {
   try {
     const keys = _.keys(obj);
     for (let k of keys) {
-      let p = currentPath === "" ? k : currentPath + "." + k;
+      let p = currentPath === '' ? k : currentPath + '.' + k;
       if (_.isObject(obj[k]) && !_.isArray(obj[k])) {
         getPathsRec(obj[k], p, result);
       } else {
@@ -61,7 +61,7 @@ const JSONToReact = (j, depth, indentation = 2) => {
       children.push(getSpaces(depth + 1, indentation));
       children.push(<span>{JSONToReact(v, depth + 1, indentation)}</span>);
       if (i !== j.length - 1) {
-        children.push(<span>{","}</span>);
+        children.push(<span>{','}</span>);
       }
       if (indentation > 0) {
         children.push(<br />);
@@ -70,14 +70,14 @@ const JSONToReact = (j, depth, indentation = 2) => {
 
     let intro = (
       <span>
-        {"["}
+        {'['}
         {indentation > 0 && j.length > 0 && <br />}
       </span>
     );
     let outro = (
       <span>
         {j.length > 0 && getSpaces(depth, indentation)}
-        {"]"}
+        {']'}
       </span>
     );
     return (
@@ -95,14 +95,14 @@ const JSONToReact = (j, depth, indentation = 2) => {
 
     let intro = (
       <span>
-        {"{"}
+        {'{'}
         {indentation > 0 && keys.length > 0 && <br />}
       </span>
     );
     let outro = (
       <span>
         {keys.length > 0 && getSpaces(depth, indentation)}
-        {"}"}
+        {'}'}
       </span>
     );
 
@@ -111,10 +111,10 @@ const JSONToReact = (j, depth, indentation = 2) => {
       const v = j[k];
       children.push(getSpaces(depth + 1, indentation));
       children.push(<span>{JSON.stringify(k)}</span>);
-      children.push(<span>:{indentation > 0 ? " " : ""}</span>);
+      children.push(<span>:{indentation > 0 ? ' ' : ''}</span>);
       children.push(<span>{JSONToReact(v, depth + 1, indentation)}</span>);
       if (i !== keys.length - 1) {
-        children.push(<span>{","}</span>);
+        children.push(<span>{','}</span>);
       }
       if (indentation > 0) {
         children.push(<br />);
@@ -150,29 +150,29 @@ function isValidHttpUrl(s) {
     return false;
   }
 
-  return url.protocol === "http:" || url.protocol === "https:";
+  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 // https://stackoverflow.com/questions/400212/how-do-i-copy-to-the-clipboard-in-javascript
 function fallbackCopyTextToClipboard(text) {
-  var textArea = document.createElement("textarea");
+  var textArea = document.createElement('textarea');
   textArea.value = text;
 
   // Avoid scrolling to bottom
-  textArea.style.top = "0";
-  textArea.style.left = "0";
-  textArea.style.position = "fixed";
+  textArea.style.top = '0';
+  textArea.style.left = '0';
+  textArea.style.position = 'fixed';
 
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
 
   try {
-    var successful = document.execCommand("copy");
-    var msg = successful ? "successful" : "unsuccessful";
-    console.log("Fallback: Copying text command was " + msg);
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Fallback: Copying text command was ' + msg);
   } catch (err) {
-    console.error("Fallback: Oops, unable to copy", err);
+    console.error('Fallback: Oops, unable to copy', err);
   }
 
   document.body.removeChild(textArea);
@@ -185,10 +185,10 @@ function copyTextToClipboard(text) {
   }
   navigator.clipboard.writeText(text).then(
     function () {
-      console.log("Async: Copying to clipboard was successful!");
+      console.log('Async: Copying to clipboard was successful!');
     },
     function (err) {
-      console.error("Async: Could not copy text: ", err);
+      console.error('Async: Could not copy text: ', err);
     }
   );
 }
@@ -198,30 +198,30 @@ function copyTextToClipboard(text) {
  * http://stackoverflow.com/a/10997390/11236
  */
 function updateURLParameter(url, param, paramVal) {
-  var newAdditionalURL = "";
-  var tempArray = url.split("?");
+  var newAdditionalURL = '';
+  var tempArray = url.split('?');
   var baseURL = tempArray[0];
   var additionalURL = tempArray[1];
-  var temp = "";
+  var temp = '';
   if (additionalURL) {
-    tempArray = additionalURL.split("&");
+    tempArray = additionalURL.split('&');
     for (var i = 0; i < tempArray.length; i++) {
-      if (tempArray[i].split("=")[0] !== param) {
+      if (tempArray[i].split('=')[0] !== param) {
         newAdditionalURL += temp + tempArray[i];
-        temp = "&";
+        temp = '&';
       }
     }
   }
 
   var encodedParamVal = encodeURIComponent(paramVal);
-  var rows_txt = temp + "" + param + "=" + encodedParamVal;
-  return baseURL + "?" + newAdditionalURL + rows_txt;
+  var rows_txt = temp + '' + param + '=' + encodedParamVal;
+  return baseURL + '?' + newAdditionalURL + rows_txt;
 }
 
 function setUrlParameter(k, v) {
   window.history.replaceState(
-    "",
-    "",
+    '',
+    '',
     updateURLParameter(window.location.href, k, v)
   );
 }
@@ -232,12 +232,12 @@ function clearURLParameters() {
 
 // https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
 function getUrlParameter(name, url = window.location.href) {
-  name = name.replace(/[[\]]/g, "\\$&");
-  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+  name = name.replace(/[[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
     results = regex.exec(url);
   if (!results) return null;
-  if (!results[2]) return "";
-  return decodeURIComponent(results[2].replace(/\+/g, " "));
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
 const Util = {

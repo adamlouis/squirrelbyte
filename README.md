@@ -38,7 +38,7 @@ POST   /documents
 GET    /documents/{documentID}
 PUT    /documents/{documentID}
 DELETE /documents/{documentID}
-POST   /documents:search
+POST   /documents:query
 ```
 
 Where a `document` resource is:
@@ -53,7 +53,7 @@ Where a `document` resource is:
 }
 ```
 
-The search endpoint, `POST /documents:search`, supports a query sytax based on 1) SQL and 2) [jsonlogic](https://jsonlogic.com/). The POST body takes the form:
+The search endpoint, `POST /documents:query`, supports a query sytax based on 1) SQL and 2) [jsonlogic](https://jsonlogic.com/). The POST body takes the form:
 
 ```
 {

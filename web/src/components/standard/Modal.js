@@ -1,9 +1,9 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
 const Container = styled.div`
   position: fixed;
-  z-index: 1;
+  z-index: 4; /* z-index 4 is the minimum value to render on top of Ace.js code editor. */
   top: 0px;
   left: 0px;
   width: 100%;
@@ -17,6 +17,7 @@ const Container = styled.div`
 const Overlay = styled(Container)`
   background-color: #000;
   opacity: 0.5;
+  z-index: 4; /* z-index 4 is the minimum value to render on top of Ace.js code editor. */
 `;
 
 const Content = styled.div`

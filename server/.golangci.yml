@@ -12,7 +12,7 @@ linters:
     - unused
     - varcheck
     # - gocyclo # TODO: address complex fns
-    # - golint # TODO: add comments
+    - golint # TODO: add comments
     - gosec
     - misspell
 

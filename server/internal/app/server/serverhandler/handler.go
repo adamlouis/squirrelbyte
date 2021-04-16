@@ -28,6 +28,7 @@ type apiHandler struct {
 	db *sqlx.DB
 }
 
+// Repositories wraps the resource repositories for the server
 type Repositories struct {
 	Document document.Repository
 	Commit   func() error
