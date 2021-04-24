@@ -3,6 +3,8 @@ package serverdef
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
 // TODO: generate all of `serverdef` package from conf / openapi declaration
@@ -17,7 +19,7 @@ func SendError(w http.ResponseWriter, err error) {
 	}
 
 	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(&Error{
+	_ = json.NewEncoder(w).Encode(&model.Error{
 		Message: err.Error(),
 	})
 }

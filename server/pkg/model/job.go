@@ -1,17 +1,4 @@
-package serverdef
-
-// TODO: generate all of `serverdef` package from conf / openapi declaration
-
-// Status is the status response
-type Status struct {
-	Status    string `json:"status"`
-	Timestamp string `json:"timestamp"`
-}
-
-// Error is the standard error response
-type Error struct {
-	Message string `json:"message"`
-}
+package model
 
 // Document is the document resource
 type Document struct {
@@ -36,17 +23,17 @@ type ListDocumentsResponse struct {
 
 // GetDocumentPathParams are the path params for getting documents
 type GetDocumentPathParams struct {
-	DocumentID string `json:"document_id"`
+	DocumentID string
 }
 
 // PutDocumentPathParams are the path parameters for putting documents
 type PutDocumentPathParams struct {
-	DocumentID string `json:"document_id"`
+	DocumentID string
 }
 
 // DeleteDocumentPathParams are that path params for deleting documents
 type DeleteDocumentPathParams struct {
-	DocumentID string `json:"document_id"`
+	DocumentID string
 }
 
 // QueryDocumentsRequest is the request body for querying documents

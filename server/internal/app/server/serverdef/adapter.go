@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 	"github.com/gorilla/mux"
 )
 
@@ -34,7 +35,7 @@ func (h *httpHandler) GetStatus(w http.ResponseWriter, req *http.Request) {
 func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
 	pageToken := req.URL.Query().Get("page_token")
 	pageSize, _ := strconv.Atoi(req.URL.Query().Get("page_size"))
-	r, err := h.a.ListDocuments(req.Context(), &ListDocumentsQueryParams{
+	r, err := h.a.ListDocuments(req.Context(), &model.ListDocumentsQueryParams{
 		PageToken: pageToken,
 		PageSize:  pageSize,
 	})
@@ -45,7 +46,7 @@ func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
 	SendOK(w, r)
 }
 func (h *httpHandler) CreateDocument(w http.ResponseWriter, req *http.Request) {
-	var d Document
+	var d model.Document
 	if err := json.NewDecoder(req.Body).Decode(&d); err != nil {
 		SendError(w, err)
 		return
@@ -69,7 +70,7 @@ func (h *httpHandler) GetDocument(w http.ResponseWriter, req *http.Request) {
 		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "bad `documentID` path parameter"))
 		return
 	}
-	r, err := h.a.GetDocument(req.Context(), &GetDocumentPathParams{DocumentID: documentID})
+	r, err := h.a.GetDocument(req.Context(), &model.GetDocumentPathParams{DocumentID: documentID})
 	if err != nil {
 		SendError(w, err)
 		return
@@ -88,12 +89,12 @@ func (h *httpHandler) PutDocument(w http.ResponseWriter, req *http.Request) {
 		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "bad `documentID` path parameter"))
 		return
 	}
-	var d Document
+	var d model.Document
 	if err := json.NewDecoder(req.Body).Decode(&d); err != nil {
 		SendError(w, err)
 		return
 	}
-	r, err := h.a.PutDocument(req.Context(), &PutDocumentPathParams{DocumentID: documentID}, &d)
+	r, err := h.a.PutDocument(req.Context(), &model.PutDocumentPathParams{DocumentID: documentID}, &d)
 	if err != nil {
 		SendError(w, err)
 		return
@@ -112,7 +113,7 @@ func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
 		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "bad `documentID` path parameter"))
 		return
 	}
-	err = h.a.DeleteDocument(req.Context(), &DeleteDocumentPathParams{DocumentID: documentID})
+	err = h.a.DeleteDocument(req.Context(), &model.DeleteDocumentPathParams{DocumentID: documentID})
 	if err != nil {
 		SendError(w, err)
 		return
@@ -120,12 +121,150 @@ func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
 	SendOK(w, struct{}{})
 }
 func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
-	var b QueryDocumentsRequest
+	var b model.QueryDocumentsRequest
 	if err := json.NewDecoder(req.Body).Decode(&b); err != nil {
 		SendError(w, err)
 		return
 	}
 	r, err := h.a.QueryDocuments(req.Context(), &b)
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) QueueJob(w http.ResponseWriter, req *http.Request) {
+	var j model.Job
+	if err := json.NewDecoder(req.Body).Decode(&j); err != nil {
+		SendError(w, err)
+		return
+	}
+	r, err := h.a.QueueJob(req.Context(), &j)
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) GetJob(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	r, err := h.a.GetJob(req.Context(), &model.GetJobPathParams{JobID: jobID})
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) ListJobs(w http.ResponseWriter, req *http.Request) {
+	pageToken := req.URL.Query().Get("page_token")
+	pageSize, _ := strconv.Atoi(req.URL.Query().Get("page_size"))
+	r, err := h.a.ListJobs(req.Context(), &model.ListJobsQueryParams{
+		PageToken: pageToken,
+		PageSize:  pageSize,
+	})
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) DeleteJob(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	err := h.a.DeleteJob(req.Context(), &model.DeleteJobPathParams{JobID: jobID})
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, struct{}{})
+}
+func (h *httpHandler) ClaimSomeJob(w http.ResponseWriter, req *http.Request) {
+	var body model.ClaimJobRequest
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		SendError(w, err)
+		return
+	}
+	r, err := h.a.ClaimSomeJob(req.Context(), &body)
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) ClaimJob(w http.ResponseWriter, req *http.Request) {
+	var body model.ClaimJobRequest
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		SendError(w, err)
+		return
+	}
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	r, err := h.a.ClaimJob(req.Context(), &model.ClaimJobPathParams{JobID: jobID})
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) ReleaseJob(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	r, err := h.a.ReleaseJob(req.Context(), &model.ReleaseJobPathParams{JobID: jobID})
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) SetJobSuccess(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	var j model.Job
+	if err := json.NewDecoder(req.Body).Decode(&j); err != nil {
+		SendError(w, err)
+		return
+	}
+	r, err := h.a.SetJobSuccess(req.Context(), &model.SetJobSuccessPathParams{JobID: jobID}, &j)
+	if err != nil {
+		SendError(w, err)
+		return
+	}
+	SendOK(w, r)
+}
+func (h *httpHandler) SetJobError(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		SendError(w, NewHTTPErrorFromString(http.StatusBadRequest, "invalid `jobID` path parameter"))
+		return
+	}
+	var j model.Job
+	if err := json.NewDecoder(req.Body).Decode(&j); err != nil {
+		SendError(w, err)
+		return
+	}
+	r, err := h.a.SetJobError(req.Context(), &model.SetJobErrorPathParams{JobID: jobID}, &j)
 	if err != nil {
 		SendError(w, err)
 		return

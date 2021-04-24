@@ -3,12 +3,12 @@ package serverhandler
 import (
 	"context"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
-func (a *apiHandler) ListDocuments(ctx context.Context, queryParams *serverdef.ListDocumentsQueryParams) (*serverdef.ListDocumentsResponse, error) {
+func (a *apiHandler) ListDocuments(ctx context.Context, queryParams *model.ListDocumentsQueryParams) (*model.ListDocumentsResponse, error) {
 	repos, err := a.GetRepositories()
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (a *apiHandler) ListDocuments(ctx context.Context, queryParams *serverdef.L
 		return nil, err
 	}
 
-	return &serverdef.ListDocumentsResponse{
+	return &model.ListDocumentsResponse{
 		Documents:     ds,
 		NextPageToken: r.NextPageToken,
 	}, nil

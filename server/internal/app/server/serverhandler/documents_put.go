@@ -6,9 +6,10 @@ import (
 
 	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
-func (a *apiHandler) PutDocument(ctx context.Context, pathParams *serverdef.PutDocumentPathParams, d *serverdef.Document) (*serverdef.Document, error) {
+func (a *apiHandler) PutDocument(ctx context.Context, pathParams *model.PutDocumentPathParams, d *model.Document) (*model.Document, error) {
 	if pathParams.DocumentID != d.ID {
 		return nil, serverdef.NewHTTPErrorFromString(http.StatusBadRequest, "document id in path does not match document id in request body")
 	}

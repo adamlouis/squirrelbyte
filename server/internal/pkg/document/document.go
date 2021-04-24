@@ -5,15 +5,6 @@ import (
 	"time"
 )
 
-// Document is the document resource
-type Document struct {
-	ID        string
-	Header    []byte
-	Body      []byte
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
 // Repository is the interface for storing & accessing documents
 type Repository interface {
 	Init(ctx context.Context) error
@@ -22,6 +13,15 @@ type Repository interface {
 	List(ctx context.Context, args *ListDocumentArgs) (*ListDocumentResult, error)
 	Delete(ctx context.Context, documentID string) error
 	Query(ctx context.Context, q *Query) (*QueryResult, error)
+}
+
+// Document is the document resource
+type Document struct {
+	ID        string
+	Header    []byte
+	Body      []byte
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // PageArgs are the arguments getting a page
@@ -60,16 +60,4 @@ type Query struct {
 type QueryResult struct {
 	PageResult
 	Result []interface{}
-}
-
-// SearchPathsQuery is query for searching paths
-type SearchPathsQuery struct {
-	PageArgs
-	Query string
-}
-
-// SearchPathsResult is result of searching paths
-type SearchPathsResult struct {
-	PageResult
-	Paths []string
 }

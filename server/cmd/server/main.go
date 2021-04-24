@@ -79,6 +79,8 @@ func newDB(c *config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	db.SetMaxOpenConns(1) // TODO: use RW lock rather than max conns
+
 	return db, nil
 }
 

@@ -3,10 +3,10 @@ package serverhandler
 import (
 	"context"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
-func (a *apiHandler) DeleteDocument(ctx context.Context, pathParams *serverdef.DeleteDocumentPathParams) error {
+func (a *apiHandler) DeleteDocument(ctx context.Context, pathParams *model.DeleteDocumentPathParams) error {
 	repos, err := a.GetRepositories()
 	if err != nil {
 		return err

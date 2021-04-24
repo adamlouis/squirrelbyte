@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
-func (a *apiHandler) QueryDocuments(ctx context.Context, body *serverdef.QueryDocumentsRequest) (*serverdef.QueryDocumentsResponse, error) {
+func (a *apiHandler) QueryDocuments(ctx context.Context, body *model.QueryDocumentsRequest) (*model.QueryDocumentsResponse, error) {
 	start := time.Now()
 	repos, err := a.GetRepositories()
 	if err != nil {
@@ -28,7 +28,7 @@ func (a *apiHandler) QueryDocuments(ctx context.Context, body *serverdef.QueryDo
 		return nil, err
 	}
 
-	return &serverdef.QueryDocumentsResponse{
+	return &model.QueryDocumentsResponse{
 		Result:        r.Result,
 		NextPageToken: r.NextPageToken,
 		Insights: map[string]interface{}{
