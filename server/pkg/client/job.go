@@ -18,14 +18,14 @@ type JobClient interface {
 	Claim(ctx context.Context) (*model.Job, error)
 }
 
-func NewHTTPJobClient(domain string) JobClient {
+func NewHTTPJobClient(url string) JobClient {
 	return &jobClient{
-		domain: domain,
+		url: url,
 	}
 }
 
 type jobClient struct {
-	domain string
+	url string
 }
 
 func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[string]interface{}) error {
@@ -36,7 +36,7 @@ func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[strin
 		return err
 	}
 
-	res, err := http.Post(fmt.Sprintf("%s/api/jobs/%s:success", jc.domain, id), "application/json", bytes.NewBuffer(b))
+	res, err := http.Post(fmt.Sprintf("%s/api/jobs/%s:success", jc.url, id), "application/json", bytes.NewBuffer(b))
 	if err != nil {
 		return fmt.Errorf("error setting success: %v", err)
 	}
@@ -58,7 +58,7 @@ func (jc *jobClient) SetError(ctx context.Context, id string, output map[string]
 	}
 
 	res, err := http.Post(
-		fmt.Sprintf("%s/api/jobs/%s:error", jc.domain, id),
+		fmt.Sprintf("%s/api/jobs/%s:error", jc.url, id),
 		"application/json",
 		bytes.NewBuffer(b),
 	)
@@ -76,7 +76,7 @@ func (jc *jobClient) SetError(ctx context.Context, id string, output map[string]
 
 func (jc *jobClient) Release(ctx context.Context, id string) error {
 	res, err := http.Post(
-		fmt.Sprintf("%s/api/jobs/%s:release", jc.domain, id),
+		fmt.Sprintf("%s/api/jobs/%s:release", jc.url, id),
 		"application/json",
 		bytes.NewBuffer([]byte("{}")))
 	if err != nil {
@@ -92,7 +92,7 @@ func (jc *jobClient) Release(ctx context.Context, id string) error {
 }
 func (jc *jobClient) Claim(ctx context.Context) (*model.Job, error) {
 	res, err := http.Post(
-		fmt.Sprintf("%s/api/jobs:claim", jc.domain),
+		fmt.Sprintf("%s/api/jobs:claim", jc.url),
 		"application/json",
 		bytes.NewBuffer([]byte("{}")),
 	)
