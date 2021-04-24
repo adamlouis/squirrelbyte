@@ -176,7 +176,7 @@ func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, 
 		return nil, err
 	}
 
-	r.Status = job.JobStatusClaimed
+	r.Status = string(job.JobStatusClaimed)
 	_, err = jr.db.Exec(`UPDATE job SET status = ? WHERE id = ?`, r.Status, r.ID)
 	if err != nil {
 		return nil, err
