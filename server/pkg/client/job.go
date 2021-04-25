@@ -12,10 +12,11 @@ import (
 )
 
 type JobClient interface {
+	Queue(ctx context.Context, name string, input map[string]interface{}) error
+	Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error)
+	Release(ctx context.Context, id string) error
 	SetSuccess(ctx context.Context, id string, output map[string]interface{}) error
 	SetError(ctx context.Context, id string, output map[string]interface{}) error
-	Release(ctx context.Context, id string) error
-	Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error)
 }
 
 func NewHTTPJobClient(url string) JobClient {
@@ -26,6 +27,28 @@ func NewHTTPJobClient(url string) JobClient {
 
 type jobClient struct {
 	url string
+}
+
+func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]interface{}) error {
+	b, err := json.Marshal(model.Job{
+		Name:  name,
+		Input: input,
+	})
+	if err != nil {
+		return err
+	}
+
+	res, err := http.Post(fmt.Sprintf("%s/api/jobs:queue", jc.url), "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		return fmt.Errorf("error setting success: %v", err)
+	}
+
+	if res.StatusCode != 200 {
+		b, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("error setting success: %s: %s", res.Status, string(b))
+	}
+
+	return nil
 }
 
 func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[string]interface{}) error {
