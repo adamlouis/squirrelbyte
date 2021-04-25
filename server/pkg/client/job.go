@@ -38,7 +38,7 @@ func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]in
 		return err
 	}
 
-	res, err := http.Post(fmt.Sprintf("%s/api/jobs:queue", jc.url), "application/json", bytes.NewBuffer(b))
+	res, err := http.Post(fmt.Sprintf("%s/api/jobs", jc.url), "application/json", bytes.NewBuffer(b))
 	if err != nil {
 		return fmt.Errorf("error setting success: %v", err)
 	}
