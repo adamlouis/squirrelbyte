@@ -40,12 +40,12 @@ func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]in
 
 	res, err := http.Post(fmt.Sprintf("%s/api/jobs", jc.url), "application/json", bytes.NewBuffer(b))
 	if err != nil {
-		return fmt.Errorf("error queueing job: %v", err)
+		return fmt.Errorf("error queueing: %v", err)
 	}
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
-		return fmt.Errorf("error queueing job: %s: %s", res.Status, string(b))
+		return fmt.Errorf("error queueing: %s: %s", res.Status, string(b))
 	}
 
 	return nil
@@ -114,13 +114,13 @@ func (jc *jobClient) Release(ctx context.Context, id string) error {
 	return nil
 }
 func (jc *jobClient) Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error) {
-	b, err := json.Marshal(*opts)
+	b, err := json.Marshal(opts)
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := http.Post(
-		fmt.Sprintf("%s/api/jobs", jc.url),
+		fmt.Sprintf("%s/api/jobs:claim", jc.url),
 		"application/json",
 		bytes.NewBuffer(b),
 	)

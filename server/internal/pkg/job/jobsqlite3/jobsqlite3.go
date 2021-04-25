@@ -189,6 +189,8 @@ func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, 
 		return nil, err
 	}
 
+	fmt.Println(sql, sqlArgs)
+
 	row := jr.db.QueryRowx(sql, sqlArgs...)
 
 	var r jobRow
