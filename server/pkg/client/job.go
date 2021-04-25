@@ -15,7 +15,7 @@ type JobClient interface {
 	SetSuccess(ctx context.Context, id string, output map[string]interface{}) error
 	SetError(ctx context.Context, id string, output map[string]interface{}) error
 	Release(ctx context.Context, id string) error
-	Claim(ctx context.Context) (*model.Job, error)
+	Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error)
 }
 
 func NewHTTPJobClient(url string) JobClient {
@@ -90,11 +90,16 @@ func (jc *jobClient) Release(ctx context.Context, id string) error {
 
 	return nil
 }
-func (jc *jobClient) Claim(ctx context.Context) (*model.Job, error) {
+func (jc *jobClient) Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error) {
+	b, err := json.Marshal(opts)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := http.Post(
 		fmt.Sprintf("%s/api/jobs:claim", jc.url),
 		"application/json",
-		bytes.NewBuffer([]byte("{}")),
+		bytes.NewBuffer(b),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error claiming job from job server: %v", err)

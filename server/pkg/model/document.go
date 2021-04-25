@@ -10,6 +10,7 @@ type Job struct {
 
 	SucceededAt *string `json:"succeeded_at"`
 	ErroredAt   *string `json:"errored_at"`
+	ClaimedAt   *string `json:"claimed_at"`
 	CreatedAt   string  `json:"created_at"`
 	UpdatedAt   string  `json:"updated_at"`
 }

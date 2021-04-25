@@ -38,6 +38,7 @@ type Job struct {
 
 	SucceededAt *time.Time
 	ErroredAt   *time.Time
+	ClaimedAt   *time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

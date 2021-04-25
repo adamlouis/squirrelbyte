@@ -124,12 +124,15 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 		}
 	}
 
-	var s, e *string
+	var s, e, c *string
 	if j.SucceededAt != nil {
 		s = sptr(ToAPITime(*j.SucceededAt))
 	}
 	if j.ErroredAt != nil {
 		e = sptr(ToAPITime(*j.ErroredAt))
+	}
+	if j.ClaimedAt != nil {
+		c = sptr(ToAPITime(*j.ClaimedAt))
 	}
 
 	return &model.Job{
@@ -140,6 +143,7 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 		Output:      output,
 		SucceededAt: s,
 		ErroredAt:   e,
+		ClaimedAt:   c,
 		CreatedAt:   ToAPITime(j.CreatedAt),
 		UpdatedAt:   ToAPITime(j.UpdatedAt),
 	}, nil
