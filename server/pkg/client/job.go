@@ -120,7 +120,7 @@ func (jc *jobClient) Claim(ctx context.Context, opts *model.ClaimJobRequest) (*m
 	}
 
 	res, err := http.Post(
-		fmt.Sprintf("%s/api/jobs:claim", jc.url),
+		fmt.Sprintf("%s/api/jobs", jc.url),
 		"application/json",
 		bytes.NewBuffer(b),
 	)
