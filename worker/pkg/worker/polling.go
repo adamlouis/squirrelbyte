@@ -6,58 +6,72 @@ import (
 	"time"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/client"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 )
 
 const (
 	errorSleepDuration = time.Second * 1
 )
 
-func NewPollingWorker(jobClient client.JobClient) Worker {
-	return &wkr{
+func NewPollingRunner(jobClient client.JobClient) Runner {
+	return &rnr{
 		jobClient: jobClient,
-		working:   false,
+		running:   false,
 		fnsByName: map[string]WorkerFn{},
 	}
 }
 
-type wkr struct {
+type rnr struct {
 	jobClient client.JobClient
-	working   bool
+	running   bool
 	fnsByName map[string]WorkerFn
 }
 
-func (w *wkr) Register(name string, fn WorkerFn) error {
-	if w.working {
-		return fmt.Errorf("cannot register a function while the worker is working")
+func (r *rnr) Register(w *Worker) error {
+	if r.running {
+		return fmt.Errorf("cannot register a worker function while the runner is running")
 	}
 
-	if _, ok := w.fnsByName[name]; ok {
+	if _, ok := r.fnsByName[w.Name]; ok {
 		return fmt.Errorf("cannot register multiple functions with the name")
 	}
 
-	w.fnsByName[name] = fn
+	r.fnsByName[w.Name] = w.Fn
+
+	fmt.Println("registered", w.Name)
+
 	return nil
 }
 
-func (w *wkr) Work(ctx context.Context) error {
-	w.working = true
+func (r *rnr) Run(ctx context.Context) error {
+	r.running = true
 	defer func() {
-		w.working = false
+		r.running = false
 	}()
 
+	jobNames := make([]string, len(r.fnsByName))
+	i := 0
+	for n := range r.fnsByName {
+		jobNames[i] = n
+		i++
+	}
+	fmt.Println("NAMES", jobNames)
+
 	for {
-		j, err := w.jobClient.Claim(ctx)
+		j, err := r.jobClient.Claim(ctx, &model.ClaimJobRequest{
+			Names: jobNames,
+		})
 		if err != nil {
 			fmt.Println(err) // TODO - errs to chan?
 			time.Sleep(errorSleepDuration)
 			continue
 		}
 
-		fmt.Println("claimed", j.ID, j.Name, w.fnsByName)
+		fmt.Println("claimed", j.ID, j.Name)
 
-		fn := w.fnsByName[j.Name]
+		fn := r.fnsByName[j.Name]
 		if fn == nil {
-			err = w.jobClient.Release(ctx, j.ID)
+			err = r.jobClient.Release(ctx, j.ID)
 			if err != nil {
 				fmt.Println(j.ID, err) // TODO - errs to chan?
 			} else {
@@ -70,15 +84,15 @@ func (w *wkr) Work(ctx context.Context) error {
 		go func() {
 			err := fn(ctx, j)
 			if err != nil {
-				err = w.jobClient.SetError(ctx, j.ID, map[string]interface{}{
+				err = r.jobClient.SetError(ctx, j.ID, map[string]interface{}{
 					"error": fmt.Sprintf("%v", err),
 				})
 				if err != nil {
 					fmt.Println(j.ID, err) // TODO - errs to chan?
 				}
 			} else {
-				noop := map[string]interface{}{} // TODO - rm `output` param ... adds confusion to where results go (wherever, but not in the job itself)
-				err = w.jobClient.SetSuccess(ctx, j.ID, noop)
+				shouldikeepthis := map[string]interface{}{} // TODO - why? rm `output` param? ... adds confusion to where results go (wherever, but not in the job itself).. or maybe if u want?
+				err = r.jobClient.SetSuccess(ctx, j.ID, shouldikeepthis)
 				if err != nil {
 					fmt.Println(j.ID, err) // TODO - errs to chan?
 				}

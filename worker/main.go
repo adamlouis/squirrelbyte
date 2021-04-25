@@ -28,12 +28,19 @@ func main() {
 
 	jobClient := client.NewHTTPJobClient(jobDomain)
 
-	pollingWorker := worker.NewPollingWorker(jobClient)
+	pollingRunner := worker.NewPollingRunner(jobClient)
 
-	err := pollingWorker.Register("hackernews.GetTop", hackernews.GetTop)
+	hn := hackernews.Integration{JobClient: jobClient}
+
+	err := pollingRunner.Register(hn.GetTopStoriesWorker())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pollingWorker.Work(ctx)
+	err = pollingRunner.Register(hn.GetItemWorker())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pollingRunner.Run(ctx)
 }

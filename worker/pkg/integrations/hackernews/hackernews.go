@@ -6,33 +6,73 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/adamlouis/squirrelbyte/server/pkg/client"
 	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/worker"
 )
 
 // todo:
-// - remove output field
-// - add claimed_at
+// X add claimed_at
+// X only poll jobs matching names
+// - handle concurrency gracefully server-side
+// - better interfaces for integration
 // - trigger job from within worker
-// - only poll jobs matching names
 // - write results to document server
+// - remove output field ... think on it ... optional?
 // - wss rather than poll
 
-func GetItem(ctx context.Context, j *model.Job) error {
-	return nil
+type Integration struct {
+	JobClient client.JobClient
 }
 
-func GetTop(ctx context.Context, j *model.Job) error {
+type GetItemInput struct {
+	ItemID int `json:"item_id"`
+}
+
+// TODO: better interface?
+func (i *Integration) GetTopStoriesWorker() *worker.Worker {
+	return &worker.Worker{
+		Name: "hackernews.GetTop",
+		Fn:   i.getTopStoriesFn,
+	}
+}
+
+func (i *Integration) GetItemWorker() *worker.Worker {
+	return &worker.Worker{
+		Name: "hackernews.GetItem",
+		Fn:   i.getItemFn,
+	}
+}
+
+func (i *Integration) getTopStoriesFn(ctx context.Context, j *model.Job) error {
 	ids, err := fetchItemIDs("https://hacker-news.firebaseio.com/v0/topstories.json")
 	if err != nil {
 		return err
 	}
 
-	// for _, id := range ids {
-	// 	// GetItem(ctx, id) // TODO: figure out nice way to queue job from in a worker fn
+	fmt.Println(ids)
+
+	for _, id := range ids {
+		// TODO: better interface
+		err = i.JobClient.Queue(ctx, "hackernews.GetItem", map[string]interface{}{"item_id": id})
+		fmt.Println(err)
+	}
+
+	return nil
+}
+
+func (i *Integration) getItemFn(ctx context.Context, j *model.Job) error {
+	fmt.Println(j.Input)
+	// ids, err := fetchItemIDs("https://hacker-news.firebaseio.com/v0/topstories.json")
+	// if err != nil {
+	// 	return err
 	// }
 
-	fmt.Println(ids)
+	// fmt.Println(ids)
+
+	// for _, id := range ids {
+	// 	i.jobClient.Queue(ctx, "hackernews.GetItem", map[string]interface{}{"item_id": id})
+	// }
 
 	return nil
 }
@@ -50,7 +90,3 @@ func fetchItemIDs(url string) ([]int, error) {
 
 	return ids, nil
 }
-
-var (
-	_ worker.WorkerFn = GetItem
-)
