@@ -42,6 +42,7 @@ func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]in
 	if err != nil {
 		return fmt.Errorf("error queueing: %v", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
@@ -63,6 +64,7 @@ func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[strin
 	if err != nil {
 		return fmt.Errorf("error setting success: %v", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
@@ -88,6 +90,7 @@ func (jc *jobClient) SetError(ctx context.Context, id string, output map[string]
 	if err != nil {
 		return fmt.Errorf("error setting error: %v", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
@@ -105,6 +108,7 @@ func (jc *jobClient) Release(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("error releasing: %v", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
@@ -127,6 +131,7 @@ func (jc *jobClient) Claim(ctx context.Context, opts *model.ClaimJobRequest) (*m
 	if err != nil {
 		return nil, fmt.Errorf("error claiming job from job server: %v", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
