@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/client"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/worker"
 )
 
@@ -20,6 +20,10 @@ import (
 // - write results to document server
 // - remove output field ... think on it ... optional?
 // - wss rather than poll
+// - per-api limiting?
+// - per-job name rate limiting?
+// - total job rate limiting?
+// - scheduler to queue jobs on cron, or whatever
 
 type Integration struct {
 	JobClient client.JobClient
@@ -44,37 +48,54 @@ func (i *Integration) GetItemWorker() *worker.Worker {
 	}
 }
 
-func (i *Integration) getTopStoriesFn(ctx context.Context, j *model.Job) error {
+func (i *Integration) getTopStoriesFn(ctx context.Context, input map[string]interface{}) error {
 	ids, err := fetchItemIDs("https://hacker-news.firebaseio.com/v0/topstories.json")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(ids)
-
 	for _, id := range ids {
-		// TODO: better interface
 		err = i.JobClient.Queue(ctx, "hackernews.GetItem", map[string]interface{}{"item_id": id})
-		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return nil
 }
 
-func (i *Integration) getItemFn(ctx context.Context, j *model.Job) error {
-	fmt.Println(j.Input)
-	// ids, err := fetchItemIDs("https://hacker-news.firebaseio.com/v0/topstories.json")
-	// if err != nil {
-	// 	return err
-	// }
+func (i *Integration) getItemFn(ctx context.Context, input map[string]interface{}) error {
+	b, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
 
-	// fmt.Println(ids)
+	inputStruct := GetItemInput{}
+	err = json.Unmarshal(b, &input)
+	if err != nil {
+		return err
+	}
 
-	// for _, id := range ids {
-	// 	i.jobClient.Queue(ctx, "hackernews.GetItem", map[string]interface{}{"item_id": id})
-	// }
+	item, err := fetchItem(inputStruct.ItemID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: write to server - document client
+	fmt.Println(string(item))
 
 	return nil
+}
+
+// todo : pattern for rate-limiting
+func fetchItem(id int) ([]byte, error) {
+	url := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%d.json", id)
+	resp, err := http.Get(url) //nolint
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
 }
 
 func fetchItemIDs(url string) ([]int, error) {
@@ -82,6 +103,7 @@ func fetchItemIDs(url string) ([]int, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	ids := []int{}
 	if err := json.NewDecoder(resp.Body).Decode(&ids); err != nil {

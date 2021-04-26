@@ -55,7 +55,6 @@ func (r *rnr) Run(ctx context.Context) error {
 		jobNames[i] = n
 		i++
 	}
-	fmt.Println("NAMES", jobNames)
 
 	for {
 		j, err := r.jobClient.Claim(ctx, &model.ClaimJobRequest{
@@ -66,35 +65,37 @@ func (r *rnr) Run(ctx context.Context) error {
 			time.Sleep(errorSleepDuration)
 			continue
 		}
+		if j == nil {
+			fmt.Println("no jobs queued") // TODO - errs to chan?
+			time.Sleep(errorSleepDuration)
+			continue
+		}
 
 		fmt.Println("claimed", j.ID, j.Name)
 
 		fn := r.fnsByName[j.Name]
 		if fn == nil {
-			err = r.jobClient.Release(ctx, j.ID)
-			if err != nil {
-				fmt.Println(j.ID, err) // TODO - errs to chan?
-			} else {
-				fmt.Println("released", j.ID)
-			}
-			time.Sleep(errorSleepDuration)
-			continue
+			return fmt.Errorf("no handler registered for job %s", j.Name)
 		}
 
 		go func() {
-			err := fn(ctx, j)
+			err := fn(ctx, j.Input)
 			if err != nil {
 				err = r.jobClient.SetError(ctx, j.ID, map[string]interface{}{
 					"error": fmt.Sprintf("%v", err),
 				})
 				if err != nil {
 					fmt.Println(j.ID, err) // TODO - errs to chan?
+				} else {
+					fmt.Println("set error", j.ID)
 				}
 			} else {
 				shouldikeepthis := map[string]interface{}{} // TODO - why? rm `output` param? ... adds confusion to where results go (wherever, but not in the job itself).. or maybe if u want?
 				err = r.jobClient.SetSuccess(ctx, j.ID, shouldikeepthis)
 				if err != nil {
 					fmt.Println(j.ID, err) // TODO - errs to chan?
+				} else {
+					fmt.Println("set success", j.ID)
 				}
 			}
 		}()

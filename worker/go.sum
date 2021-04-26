@@ -13,6 +13,12 @@ github.com/adamlouis/squirrelbyte/server v0.0.0-20210425181650-da5ada7a2e2f h1:y
 github.com/adamlouis/squirrelbyte/server v0.0.0-20210425181650-da5ada7a2e2f/go.mod h1:+106XxJdvN1xE5biN/GOODtwmr6Wf8DklQUS7pItNeA=
 github.com/adamlouis/squirrelbyte/server v0.0.0-20210425182426-11ce12a2082d h1:xI0iecQawlOdv8jBAxRZ7kPWt4KRQMV0DhPqkTtqylc=
 github.com/adamlouis/squirrelbyte/server v0.0.0-20210425182426-11ce12a2082d/go.mod h1:+106XxJdvN1xE5biN/GOODtwmr6Wf8DklQUS7pItNeA=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426002435-d61558c58041 h1:jJmqTGgGSICKA/BIu43+Z95QhQ+f9tf3PVzMvLSkDsc=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426002435-d61558c58041/go.mod h1:+106XxJdvN1xE5biN/GOODtwmr6Wf8DklQUS7pItNeA=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426041544-0604610123a1 h1:vYswhMLUMkCBfIGJ4b5ySOMX6DLe/MsZEWoocukbBdU=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426041544-0604610123a1/go.mod h1:+106XxJdvN1xE5biN/GOODtwmr6Wf8DklQUS7pItNeA=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426043209-59e1e65e9381 h1:IKLi6bzcspQBbuYuZPibLiIzi+U6kc1w29BHM5wz/5w=
+github.com/adamlouis/squirrelbyte/server v0.0.0-20210426043209-59e1e65e9381/go.mod h1:+106XxJdvN1xE5biN/GOODtwmr6Wf8DklQUS7pItNeA=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
