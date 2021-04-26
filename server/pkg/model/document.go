@@ -2,17 +2,17 @@ package model
 
 // Job is the job resource
 type Job struct {
-	ID     string                 `json:"id"`
-	Name   string                 `json:"name"`
-	Status string                 `json:"status"`
-	Input  map[string]interface{} `json:"input"`
-	Output map[string]interface{} `json:"output"`
+	ID     string     `json:"id"`
+	Name   string     `json:"name"`
+	Status string     `json:"status"`
+	Input  JSONObject `json:"input"`
 
-	SucceededAt *string `json:"succeeded_at"`
-	ErroredAt   *string `json:"errored_at"`
-	ClaimedAt   *string `json:"claimed_at"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	ScheduledFor *string `json:"scheduled_for"`
+	SucceededAt  *string `json:"succeeded_at"`
+	ErroredAt    *string `json:"errored_at"`
+	ClaimedAt    *string `json:"claimed_at"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
 
 // GetJobPathParams are the path params for getting jobs

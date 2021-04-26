@@ -10,3 +10,5 @@ type Status struct {
 type Error struct {
 	Message string `json:"message"`
 }
+
+type JSONObject map[string]interface{}

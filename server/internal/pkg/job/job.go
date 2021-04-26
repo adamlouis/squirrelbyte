@@ -15,8 +15,8 @@ type Repository interface {
 	Queue(ctx context.Context, j *Job) (*Job, error)
 	Claim(ctx context.Context, opts ClaimOptions) (*Job, error)
 	Release(ctx context.Context, id string) (*Job, error)
-	Success(ctx context.Context, id string, out interface{}) (*Job, error)
-	Error(ctx context.Context, id string, out interface{}) (*Job, error)
+	Success(ctx context.Context, id string) (*Job, error)
+	Error(ctx context.Context, id string) (*Job, error)
 }
 
 type JobStatus string
@@ -33,14 +33,14 @@ type Job struct {
 	Name   string
 	Status JobStatus
 
-	Input  []byte
-	Output *[]byte
+	Input []byte
 
-	SucceededAt *time.Time
-	ErroredAt   *time.Time
-	ClaimedAt   *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ScheduledFor *time.Time
+	SucceededAt  *time.Time
+	ErroredAt    *time.Time
+	ClaimedAt    *time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type ClaimOptions struct {

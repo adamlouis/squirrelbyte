@@ -41,10 +41,10 @@ func (jr *jobRepo) Init(ctx context.Context) error {
 		name TEXT NOT NULL CHECK(name <> ''),
 		status TEXT NOT NULL CHECK(status <> ''),
 		input TEXT NOT NULL CHECK(json_type(input) == 'object'),
-		output TEXT NULL CHECK(json_type(output) == 'object'),
 		succeed_at TEXT NULL,
-		claimed_at TEXT NULL,
 		errored_at TEXT NULL,
+		claimed_at TEXT NULL,
+		scheduled_for TEXT NULL,
 		created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL CHECK(id <> ''),
 		updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL CHECK(id <> '')
 	);
@@ -52,6 +52,7 @@ func (jr *jobRepo) Init(ctx context.Context) error {
 	CREATE INDEX IF NOT EXISTS job_name ON job(name);
 	CREATE INDEX IF NOT EXISTS job_status ON job(status);
 	CREATE INDEX IF NOT EXISTS job_created_at ON job(created_at);
+	CREATE INDEX IF NOT EXISTS job_scheduled_for ON job(scheduled_for);
 
 	CREATE TRIGGER IF NOT EXISTS set_job_updated_at
 	AFTER UPDATE ON job
@@ -62,29 +63,35 @@ func (jr *jobRepo) Init(ctx context.Context) error {
 }
 
 type jobRow struct {
-	ID          string  `db:"id"`
-	Name        string  `db:"name"`
-	Status      string  `db:"status"`
-	Input       []byte  `db:"input"`
-	Output      *[]byte `db:"output"`
-	SucceededAt *string `db:"succeed_at"`
-	ClaimedAt   *string `db:"claimed_at"`
-	ErroredAt   *string `db:"errored_at"`
-	CreatedAt   string  `db:"created_at"`
-	UpdatedAt   string  `db:"updated_at"`
+	ID           string  `db:"id"`
+	Name         string  `db:"name"`
+	Status       string  `db:"status"`
+	Input        []byte  `db:"input"`
+	SucceededAt  *string `db:"succeed_at"`
+	ClaimedAt    *string `db:"claimed_at"`
+	ScheduledFor *string `db:"scheduled_for"`
+	ErroredAt    *string `db:"errored_at"`
+	CreatedAt    string  `db:"created_at"`
+	UpdatedAt    string  `db:"updated_at"`
 }
 
 func (jr *jobRepo) Queue(ctx context.Context, j *job.Job) (*job.Job, error) {
 	j.ID = uuid.New().String()
 	j.Status = job.JobStatusQueued
 
+	var scheduledForStr *string
+	if j.ScheduledFor != nil {
+		s := j.ScheduledFor.Format(datetimeFormat)
+		scheduledForStr = &s
+	}
+
 	_, err := jr.db.Exec(`
 			INSERT INTO
 				job
-					(id, name, status, input)
+					(id, name, status, input, scheduled_for)
 				VALUES
-					(?, ?, ?, ?)`,
-		j.ID, j.Name, j.Status, j.Input)
+					(?, ?, ?, ?, ?)`,
+		j.ID, j.Name, j.Status, j.Input, scheduledForStr)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +124,7 @@ func (jr *jobRepo) Delete(ctx context.Context, id string) error {
 func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 	row := jr.db.QueryRowx(`
 		SELECT
-			id, name, status, input, output, succeed_at, errored_at, claimed_at, created_at, updated_at
+			id, name, status, input, succeed_at, errored_at, claimed_at, created_at, updated_at, scheduled_for
 		FROM job
 		WHERE id = ?`,
 		id,
@@ -143,7 +150,7 @@ func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 func (jr *jobRepo) List(ctx context.Context, args *job.ListJobArgs) (*job.ListJobResults, error) {
 	rows, err := jr.db.Queryx(`
 	SELECT
-		id, name, status, input, output, succeed_at, errored_at, claimed_at, created_at, updated_at
+		id, name, status, input, succeed_at, errored_at, claimed_at, created_at, updated_at, scheduled_for
 	FROM job
 	ORDER BY created_at`,
 	)
@@ -179,6 +186,10 @@ func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, 
 		From("job").
 		OrderBy("created_at ASC").
 		Where(sq.Eq{"status": job.JobStatusQueued}).
+		Where(sq.Or{
+			sq.Expr("scheduled_for IS NULL"),
+			sq.LtOrEq{"scheduled_for": "CURRENT_TIMESTAMP"},
+		}).
 		Limit(1) // get n+1 so we know if there's a next page
 
 	if opts.JobID != "" {
@@ -236,7 +247,7 @@ func (jr *jobRepo) Release(ctx context.Context, id string) (*job.Job, error) {
 
 	return jr.Get(ctx, id)
 }
-func (jr *jobRepo) Success(ctx context.Context, id string, out interface{}) (*job.Job, error) {
+func (jr *jobRepo) Success(ctx context.Context, id string) (*job.Job, error) {
 	j, err := jr.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -247,14 +258,14 @@ func (jr *jobRepo) Success(ctx context.Context, id string, out interface{}) (*jo
 	}
 
 	j.Status = job.JobStatusSuccess
-	_, err = jr.db.Exec(`UPDATE job SET status = ?, output = ?, succeed_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusSuccess, out, j.ID)
+	_, err = jr.db.Exec(`UPDATE job SET status = ?, succeed_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusSuccess, j.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	return jr.Get(ctx, id)
 }
-func (jr *jobRepo) Error(ctx context.Context, id string, out interface{}) (*job.Job, error) {
+func (jr *jobRepo) Error(ctx context.Context, id string) (*job.Job, error) {
 	j, err := jr.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -265,7 +276,7 @@ func (jr *jobRepo) Error(ctx context.Context, id string, out interface{}) (*job.
 	}
 
 	j.Status = job.JobStatusError
-	_, err = jr.db.Exec(`UPDATE job SET status = ?, output = ?, errored_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusError, out, j.ID)
+	_, err = jr.db.Exec(`UPDATE job SET status = ?, errored_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusError, j.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -299,17 +310,22 @@ func jobRowToJob(r *jobRow) (*job.Job, error) {
 		return nil, err
 	}
 
+	sf, err := tptr(r.ScheduledFor)
+	if err != nil {
+		return nil, err
+	}
+
 	return &job.Job{
-		ID:          r.ID,
-		Name:        r.Name,
-		Status:      job.JobStatus(r.Status),
-		Input:       r.Input,
-		Output:      r.Output,
-		SucceededAt: sa,
-		ErroredAt:   er,
-		ClaimedAt:   ca,
-		CreatedAt:   c,
-		UpdatedAt:   u,
+		ID:           r.ID,
+		Name:         r.Name,
+		Status:       job.JobStatus(r.Status),
+		Input:        r.Input,
+		SucceededAt:  sa,
+		ErroredAt:    er,
+		ClaimedAt:    ca,
+		ScheduledFor: sf,
+		CreatedAt:    c,
+		UpdatedAt:    u,
 	}, nil
 }
 

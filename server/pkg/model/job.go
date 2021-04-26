@@ -2,11 +2,11 @@ package model
 
 // Document is the document resource
 type Document struct {
-	ID        string                 `json:"id"`
-	Header    map[string]interface{} `json:"header"`
-	Body      map[string]interface{} `json:"body"`
-	CreatedAt string                 `json:"created_at"`
-	UpdatedAt string                 `json:"updated_at"`
+	ID        string     `json:"id"`
+	Header    JSONObject `json:"header"`
+	Body      JSONObject `json:"body"`
+	CreatedAt string     `json:"created_at"`
+	UpdatedAt string     `json:"updated_at"`
 }
 
 // ListDocumentsQueryParams are the query params for listing documents
@@ -48,7 +48,7 @@ type QueryDocumentsRequest struct {
 
 // QueryDocumentsResponse is the response body from querying documents
 type QueryDocumentsResponse struct {
-	Result        []interface{}          `json:"result"`
-	NextPageToken string                 `json:"next_page_token"`
-	Insights      map[string]interface{} `json:"insights"`
+	Result        []interface{} `json:"result"`
+	NextPageToken string        `json:"next_page_token"`
+	Insights      JSONObject    `json:"insights"`
 }

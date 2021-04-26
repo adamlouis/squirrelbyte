@@ -80,9 +80,16 @@ func InternalDocumentsToAPIDocuments(ds []*document.Document) ([]*model.Document
 	return r, nil
 }
 
-// ToAPITime returns an RFC3339 time from a golangtim
+// ToAPITime returns an RFC3339 time from a golang time
 func ToAPITime(t time.Time) string {
 	return t.Format(time.RFC3339)
+}
+
+// ToInternalTime returns a golang time from a RFC3339
+func ToInternalTime(s string) (time.Time, error) {
+	// fmt.Println(time.RFC3339[:len(time.RFC3339)-5], s)
+	// return time.Parse(time.RFC3339[:len(time.RFC3339)-5], s)
+	return time.Parse(time.RFC3339, s)
 }
 
 // APIJobToInternalJob returns the API representation of job form the internal representation
@@ -93,17 +100,21 @@ func APIJobToInternalJob(j *model.Job) (*job.Job, error) {
 		return nil, err
 	}
 
-	output, _ := json.Marshal(j.Output)
-	if err != nil {
-		return nil, err
+	var scheduledFor *time.Time
+	if j.ScheduledFor != nil {
+		sf, err := ToInternalTime(*j.ScheduledFor)
+		if err != nil {
+			return nil, err
+		}
+		scheduledFor = &sf
 	}
 
 	return &job.Job{
-		ID:     j.ID,
-		Name:   j.Name,
-		Status: "", // todo
-		Input:  input,
-		Output: &output,
+		ID:           j.ID,
+		Name:         j.Name,
+		Status:       "", // todo
+		Input:        input,
+		ScheduledFor: scheduledFor,
 	}, nil
 }
 
@@ -116,15 +127,7 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 		return nil, err
 	}
 
-	var output map[string]interface{}
-	if j.Output != nil {
-		err = json.Unmarshal(*j.Output, &output)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var s, e, c *string
+	var s, e, c, sf *string
 	if j.SucceededAt != nil {
 		s = sptr(ToAPITime(*j.SucceededAt))
 	}
@@ -134,18 +137,21 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 	if j.ClaimedAt != nil {
 		c = sptr(ToAPITime(*j.ClaimedAt))
 	}
+	if j.ScheduledFor != nil {
+		sf = sptr(ToAPITime(*j.ScheduledFor))
+	}
 
 	return &model.Job{
-		ID:          j.ID,
-		Name:        j.Name,
-		Status:      string(j.Status),
-		Input:       input,
-		Output:      output,
-		SucceededAt: s,
-		ErroredAt:   e,
-		ClaimedAt:   c,
-		CreatedAt:   ToAPITime(j.CreatedAt),
-		UpdatedAt:   ToAPITime(j.UpdatedAt),
+		ID:           j.ID,
+		Name:         j.Name,
+		Status:       string(j.Status),
+		Input:        input,
+		SucceededAt:  s,
+		ErroredAt:    e,
+		ClaimedAt:    c,
+		ScheduledFor: sf,
+		CreatedAt:    ToAPITime(j.CreatedAt),
+		UpdatedAt:    ToAPITime(j.UpdatedAt),
 	}, nil
 }
 

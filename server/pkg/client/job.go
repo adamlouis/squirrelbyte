@@ -12,11 +12,11 @@ import (
 )
 
 type JobClient interface {
-	Queue(ctx context.Context, name string, input map[string]interface{}) error
+	Queue(ctx context.Context, name string, input model.JSONObject) error
 	Claim(ctx context.Context, opts *model.ClaimJobRequest) (*model.Job, error)
 	Release(ctx context.Context, id string) error
-	SetSuccess(ctx context.Context, id string, output map[string]interface{}) error
-	SetError(ctx context.Context, id string, output map[string]interface{}) error
+	SetSuccess(ctx context.Context, id string) error
+	SetError(ctx context.Context, id string) error
 }
 
 func NewHTTPJobClient(url string) JobClient {
@@ -29,7 +29,7 @@ type jobClient struct {
 	url string
 }
 
-func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]interface{}) error {
+func (jc *jobClient) Queue(ctx context.Context, name string, input model.JSONObject) error {
 	b, err := json.Marshal(model.Job{
 		Name:  name,
 		Input: input,
@@ -52,15 +52,12 @@ func (jc *jobClient) Queue(ctx context.Context, name string, input map[string]in
 	return nil
 }
 
-func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[string]interface{}) error {
-	b, err := json.Marshal(model.Job{
-		Output: output,
-	})
-	if err != nil {
-		return err
-	}
-
-	res, err := http.Post(fmt.Sprintf("%s/api/jobs/%s:success", jc.url, id), "application/json", bytes.NewBuffer(b))
+func (jc *jobClient) SetSuccess(ctx context.Context, id string) error {
+	res, err := http.Post(
+		fmt.Sprintf("%s/api/jobs/%s:success", jc.url, id),
+		"application/json",
+		bytes.NewBuffer([]byte("{}")),
+	)
 	if err != nil {
 		return fmt.Errorf("error setting success: %v", err)
 	}
@@ -74,18 +71,11 @@ func (jc *jobClient) SetSuccess(ctx context.Context, id string, output map[strin
 	return nil
 }
 
-func (jc *jobClient) SetError(ctx context.Context, id string, output map[string]interface{}) error {
-	b, err := json.Marshal(model.Job{
-		Output: output,
-	})
-	if err != nil {
-		return err
-	}
-
+func (jc *jobClient) SetError(ctx context.Context, id string) error {
 	res, err := http.Post(
 		fmt.Sprintf("%s/api/jobs/%s:error", jc.url, id),
 		"application/json",
-		bytes.NewBuffer(b),
+		bytes.NewBuffer([]byte("{}")),
 	)
 	if err != nil {
 		return fmt.Errorf("error setting error: %v", err)
