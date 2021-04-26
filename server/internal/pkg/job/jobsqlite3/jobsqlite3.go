@@ -2,11 +2,14 @@ package jobsqlite3
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -123,6 +126,9 @@ func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 	var r jobRow
 	err := row.StructScan(&r)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, serverdef.NewHTTPErrorFromString(http.StatusNotFound, fmt.Sprintf("job %s not found", id))
+		}
 		return nil, err
 	}
 
@@ -141,12 +147,15 @@ func (jr *jobRepo) List(ctx context.Context, args *job.ListJobArgs) (*job.ListJo
 	FROM job
 	ORDER BY created_at`,
 	)
+	jobs := []*job.Job{}
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return &job.ListJobResults{Jobs: jobs}, nil
+		}
 		return nil, err
 	}
 
-	jobs := []*job.Job{}
 	for rows.Next() {
 		var r jobRow
 		err = rows.StructScan(&r)
@@ -184,18 +193,19 @@ func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, 
 		sb = sb.Where(ors)
 	}
 
-	sql, sqlArgs, err := sb.ToSql()
+	query, queryArgs, err := sb.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println(sql, sqlArgs)
-
-	row := jr.db.QueryRowx(sql, sqlArgs...)
+	row := jr.db.QueryRowx(query, queryArgs...)
 
 	var r jobRow
 	err = row.StructScan(&r)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

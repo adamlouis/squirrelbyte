@@ -19,6 +19,7 @@ func SendError(w http.ResponseWriter, err error) {
 	}
 
 	w.WriteHeader(code)
+
 	_ = json.NewEncoder(w).Encode(&model.Error{
 		Message: err.Error(),
 	})
