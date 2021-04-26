@@ -13,18 +13,20 @@ const (
 	errorSleepDuration = time.Second * 1
 )
 
-func NewPollingRunner(jobClient client.JobClient) Runner {
+func NewPollingRunner(jobClient client.JobClient, maxConcurrent int) Runner {
 	return &rnr{
-		jobClient: jobClient,
-		running:   false,
-		fnsByName: map[string]WorkerFn{},
+		maxConcurrent: maxConcurrent,
+		jobClient:     jobClient,
+		running:       false,
+		fnsByName:     map[string]WorkerFn{},
 	}
 }
 
 type rnr struct {
-	jobClient client.JobClient
-	running   bool
-	fnsByName map[string]WorkerFn
+	maxConcurrent int
+	jobClient     client.JobClient
+	running       bool
+	fnsByName     map[string]WorkerFn
 }
 
 func (r *rnr) Register(w *Worker) error {
@@ -56,7 +58,10 @@ func (r *rnr) Run(ctx context.Context) error {
 		i++
 	}
 
+	jobChan := make(chan struct{}, r.maxConcurrent)
+
 	for {
+
 		j, err := r.jobClient.Claim(ctx, &model.ClaimJobRequest{
 			Names: jobNames,
 		})
@@ -75,29 +80,33 @@ func (r *rnr) Run(ctx context.Context) error {
 
 		fn := r.fnsByName[j.Name]
 		if fn == nil {
-			return fmt.Errorf("no handler registered for job %s", j.Name)
+			return fmt.Errorf("no handler registered for job %s", j.Name) // TODO - close channels?
 		}
 
-		go func() {
-			err := fn(ctx, j.Input)
-			if err != nil {
-				err = r.jobClient.SetError(ctx, j.ID, map[string]interface{}{
-					"error": fmt.Sprintf("%v", err),
-				})
-				if err != nil {
-					fmt.Println(j.ID, err) // TODO - errs to chan?
-				} else {
-					fmt.Println("set error", j.ID)
-				}
-			} else {
-				shouldikeepthis := map[string]interface{}{} // TODO - why? rm `output` param? ... adds confusion to where results go (wherever, but not in the job itself).. or maybe if u want?
-				err = r.jobClient.SetSuccess(ctx, j.ID, shouldikeepthis)
-				if err != nil {
-					fmt.Println(j.ID, err) // TODO - errs to chan?
-				} else {
-					fmt.Println("set success", j.ID)
-				}
-			}
-		}()
+		jobChan <- struct{}{}
+		go func(c <-chan struct{}) {
+			// TODO - rm print statements, trace starting here
+			r.do(ctx, fn, j)
+			<-c
+		}(jobChan)
+	}
+}
+
+func (r *rnr) do(ctx context.Context, fn WorkerFn, j *model.Job) {
+	err := fn(ctx, j.Input)
+	if err != nil {
+		err = r.jobClient.SetError(ctx, j.ID)
+		if err != nil {
+			fmt.Println(j.ID, err) // TODO - errs to chan?
+		} else {
+			fmt.Println("set error", j.ID)
+		}
+	} else {
+		err = r.jobClient.SetSuccess(ctx, j.ID)
+		if err != nil {
+			fmt.Println(j.ID, err) // TODO - errs to chan?
+		} else {
+			fmt.Println("set success", j.ID)
+		}
 	}
 }

@@ -16,21 +16,15 @@ const (
 
 type WorkerFn func(ctx context.Context, j *model.Job) (map[string]interface{}, error)
 
-// todo
-// - provide workers w/ oauth access tokens, 3p credentials, etc.
-// - web socket
-// - scheduler to queue at times
-// - "scheduled for?"
-// - integrations: strava, spotify, hacker news, github, aws
-
 func main() {
 	ctx := context.Background()
 
 	jobClient := client.NewHTTPJobClient(jobDomain)
+	documentClient := client.NewHTTPDocumentClient(jobDomain)
 
-	pollingRunner := worker.NewPollingRunner(jobClient)
+	pollingRunner := worker.NewPollingRunner(jobClient, 3)
 
-	hn := hackernews.Integration{JobClient: jobClient}
+	hn := hackernews.Integration{JobClient: jobClient, DocumentClient: documentClient}
 
 	err := pollingRunner.Register(hn.GetTopStoriesWorker())
 	if err != nil {

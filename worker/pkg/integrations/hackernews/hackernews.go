@@ -8,32 +8,20 @@ import (
 	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/client"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/worker"
 )
 
-// todo:
-// X add claimed_at
-// X only poll jobs matching names
-// - handle concurrency gracefully server-side
-// - better interfaces for integration
-// - trigger job from within worker
-// - write results to document server
-// - remove output field ... think on it ... optional?
-// - wss rather than poll
-// - per-api limiting?
-// - per-job name rate limiting?
-// - total job rate limiting?
-// - scheduler to queue jobs on cron, or whatever
-
 type Integration struct {
-	JobClient client.JobClient
+	JobClient      client.JobClient
+	DocumentClient client.DocumentClient
 }
 
 type GetItemInput struct {
-	ItemID int `json:"item_id"`
+	ItemID uint64 `json:"item_id"`
 }
 
-// TODO: better interface?
+// TODO: this interface needs help ... find the pattern
 func (i *Integration) GetTopStoriesWorker() *worker.Worker {
 	return &worker.Worker{
 		Name: "hackernews.GetTop",
@@ -71,7 +59,7 @@ func (i *Integration) getItemFn(ctx context.Context, input map[string]interface{
 	}
 
 	inputStruct := GetItemInput{}
-	err = json.Unmarshal(b, &input)
+	err = json.Unmarshal(b, &inputStruct)
 	if err != nil {
 		return err
 	}
@@ -81,16 +69,30 @@ func (i *Integration) getItemFn(ctx context.Context, input map[string]interface{
 		return err
 	}
 
-	// TODO: write to server - document client
-	fmt.Println(string(item))
+	body := map[string]interface{}{}
+	err = json.Unmarshal(item, &body)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	_, err = i.DocumentClient.Post(ctx, &model.Document{
+		ID: fmt.Sprintf("hn.item.%d", inputStruct.ItemID),
+		Header: map[string]interface{}{
+			"api_url": getItemURL(inputStruct.ItemID),
+			"hn_url":  fmt.Sprintf("https://news.ycombinator.com/item?id=%d", inputStruct.ItemID),
+		},
+		Body: body,
+	})
+
+	return err
 }
 
-// todo : pattern for rate-limiting
-func fetchItem(id int) ([]byte, error) {
-	url := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%d.json", id)
-	resp, err := http.Get(url) //nolint
+func getItemURL(id uint64) string {
+	return fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%d.json", id)
+}
+
+func fetchItem(id uint64) ([]byte, error) {
+	resp, err := http.Get(getItemURL(id)) //nolint
 	if err != nil {
 		return nil, err
 	}
