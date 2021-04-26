@@ -133,6 +133,10 @@ func (jc *jobClient) Claim(ctx context.Context, opts *model.ClaimJobRequest) (*m
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode == http.StatusNoContent {
+		return nil, nil
+	}
+
 	if res.StatusCode != 200 {
 		b, _ := ioutil.ReadAll(res.Body)
 		return nil, fmt.Errorf("error claiming job from job server: %s: %s", res.Status, string(b))
