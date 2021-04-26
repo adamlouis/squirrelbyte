@@ -21,10 +21,10 @@ func RegisterRouter(a APIHandler, r *mux.Router) {
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.DeleteDocument)).Methods(http.MethodDelete)
 	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
 	// jobs
-	r.Handle("/jobs", http.HandlerFunc(h.QueueJob)).Methods(http.MethodPost)
 	r.Handle("/jobs", http.HandlerFunc(h.ListJobs)).Methods(http.MethodGet)
 	r.Handle("/jobs/{jobID}", http.HandlerFunc(h.GetJob)).Methods(http.MethodGet)
 	r.Handle("/jobs/{jobID}", http.HandlerFunc(h.DeleteJob)).Methods(http.MethodDelete)
+	r.Handle("/jobs:queue", http.HandlerFunc(h.QueueJob)).Methods(http.MethodPost)
 	r.Handle("/jobs:claim", http.HandlerFunc(h.ClaimSomeJob)).Methods(http.MethodPost)
 	r.Handle("/jobs/{jobID}:claim", http.HandlerFunc(h.ClaimJob)).Methods(http.MethodPost)
 	r.Handle("/jobs/{jobID}:release", http.HandlerFunc(h.ReleaseJob)).Methods(http.MethodPost)
