@@ -55,6 +55,11 @@ export const runQuery = async (query) => {
 
 export const getQueryFromURL = () => {
   try {
+    // TODO: routing
+    if (window.location.pathname !== '/') {
+      return
+    }
+
     const q = getURLQueryParameter(QUERY_PARAM_NAME);
     if (!q) {
       clearURLQueryParameters();

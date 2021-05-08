@@ -1,0 +1,27 @@
+todo:
+X add claimed_at
+X only poll jobs matching names
+X total job rate limiting?
+X remove output field ... think on it ... optional?
+X write results to document server
+X trigger job from within worker
+X scheduler to queue jobs on cron, or whatever
+- secrets / oauth
+- scheduler API / crud
+- document - multiple dbs? multiple tables?
+- graceful worker shutdown
+- websocket api for worker rather than poll
+- better interfaces for integration ... send error?
+- exploration UI
+- allow read conncurrency on server, inc connection limit
+- strava webhook
+- something for db migrations
+- continuous deployment for personal stack
+- open source singlenode infrastructure?
+- per-api limiting (strava, spotify, hn, etc)?
+- per-job name rate limiting?
+
+
+documents|jobs|schedule|secrets
+documents/hn.item.123
+documents/spotify/hn.item.123

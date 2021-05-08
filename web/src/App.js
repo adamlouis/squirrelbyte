@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Loader } from './components/standard/Loader';
+import { OnLoad } from './data/OnLoad';
 
 import { Header } from './components/Header';
 import { InfoBox } from './components/InfoBox';
@@ -19,6 +20,8 @@ const ResultView = styled.div`
   display: flex;
   justify-content: center;
 `;
+
+OnLoad();
 
 function App() {
   const [queryResult, setQueryResult] = useState(undefined);

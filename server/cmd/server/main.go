@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -11,7 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/app/server"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/documentserver"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/jobserver"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/oauthserver"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/schedulerserver"
+	"github.com/adamlouis/squirrelbyte/server/internal/app/server/secretserver"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -74,8 +77,8 @@ func newConfig() (*config, error) {
 	}, nil
 }
 
-func newDB(c *config) (*sqlx.DB, error) {
-	db, err := sqlx.Open("sqlite3", c.SQLite3Path)
+func newDB(c *config, path string) (*sqlx.DB, error) {
+	db, err := sqlx.Open("sqlite3", path)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +92,8 @@ var (
 )
 
 func main() {
+	// ctx := context.Background()
+
 	flag.Parse()
 
 	c, err := newConfig()
@@ -96,52 +101,82 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := newDB(c)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close() // nolint
+	// db, err := newDB(c)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close() // nolint
 
-	fmt.Printf("starting server :%d\n", c.ServerPort)
-	err = server.New().Serve(&server.Opts{
-		Port:      c.ServerPort,
-		DB:        db,
-		StaticDir: c.StaticDir,
-		Middlewares: []mux.MiddlewareFunc{
-			func(next http.Handler) http.Handler {
-				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					now := time.Now()
-					next.ServeHTTP(w, r)
-					// todo: produce just 1 structured event per req w/ all metadata
-					// todo: do w/ tracing / opentelemetry, start a span, pass down context, etc
-					j, _ := json.Marshal(map[string]interface{}{
-						"type":        "REQUEST",
-						"method":      r.Method,
-						"name":        fmt.Sprintf("%s:%s", r.URL.Path, r.Method),
-						"duration_ms": time.Since(now) / time.Millisecond,
-						"path":        r.URL.Path,
-						"time":        time.Now().Format(time.RFC3339),
-					})
-					fmt.Println(string(j))
-				})
-			},
-			func(next http.Handler) http.Handler {
-				// allow any req with "allowed methods" OR "allowed paths"
-				// used to block reqs in read only mode
-				// one day, proper authz
-				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					if !c.AllowedHTTPMethods[r.Method] && !c.AllowedHTTPPaths[r.URL.Path] {
-						w.Header().Add("Content-Type", "application/json")
-						w.WriteHeader(http.StatusForbidden)
-						_, _ = w.Write([]byte(`{"message":"forbidden"}`))
-						return
-					}
-					next.ServeHTTP(w, r)
-				})
-			},
-		},
-	})
-	if err != nil {
-		log.Fatal(err)
+	// go func() {
+	// 	// TODO: break out - jobs, docs, scheduler, secrets
+	// 	jobClient := client.NewHTTPJobClient("http://localhost:9922")
+	// 	sc := scheduler.NewScheduler(jobClient)
+	// 	sc.Run(ctx)
+	// }()
+
+	router := mux.NewRouter()
+	documentserver.RegisterRouter(documentserver.NewAPIHandler(), router)
+	jobserver.RegisterRouter(jobserver.NewAPIHandler(), router)
+	oauthserver.RegisterRouter(oauthserver.NewAPIHandler(), router)
+	secretserver.RegisterRouter(secretserver.NewAPIHandler(), router)
+	schedulerserver.RegisterRouter(schedulerserver.NewAPIHandler(), router)
+
+	srv := &http.Server{
+		Handler:      router,
+		Addr:         fmt.Sprintf(":%d", c.ServerPort),
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
 	}
+
+	srv.ListenAndServe()
+
+	// err := documentserver.New().Serve(documentserver.Opts{
+	// 	Port: 9922,
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Printf("starting server :%d\n", c.ServerPort)
+	// err = server.New().Serve(&server.Opts{
+	// 	Port:      c.ServerPort,
+	// 	DB:        db,
+	// 	StaticDir: c.StaticDir,
+	// 	Middlewares: []mux.MiddlewareFunc{
+	// 		func(next http.Handler) http.Handler {
+	// 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 				now := time.Now()
+	// 				next.ServeHTTP(w, r)
+	// 				// todo: produce just 1 structured event per req w/ all metadata
+	// 				// todo: do w/ tracing / opentelemetry, start a span, pass down context, etc
+	// 				j, _ := json.Marshal(map[string]interface{}{
+	// 					"type":        "REQUEST",
+	// 					"method":      r.Method,
+	// 					"name":        fmt.Sprintf("%s:%s", r.URL.Path, r.Method),
+	// 					"duration_ms": time.Since(now) / time.Millisecond,
+	// 					"path":        r.URL.Path,
+	// 					"time":        time.Now().Format(time.RFC3339),
+	// 				})
+	// 				fmt.Println(string(j))
+	// 			})
+	// 		},
+	// 		func(next http.Handler) http.Handler {
+	// 			// allow any req with "allowed methods" OR "allowed paths"
+	// 			// used to block reqs in read only mode
+	// 			// one day, proper authz
+	// 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 				if !c.AllowedHTTPMethods[r.Method] && !c.AllowedHTTPPaths[r.URL.Path] {
+	// 					w.Header().Add("Content-Type", "application/json")
+	// 					w.WriteHeader(http.StatusForbidden)
+	// 					_, _ = w.Write([]byte(`{"message":"forbidden"}`))
+	// 					return
+	// 				}
+	// 				next.ServeHTTP(w, r)
+	// 			})
+	// 		},
+	// 	},
+	// })
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

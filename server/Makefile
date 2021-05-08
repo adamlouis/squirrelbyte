@@ -14,3 +14,9 @@ run-local: build run-local-no-build
 
 run-local-ro: build
 	./bin/server --dotenv .env.local.ro
+
+gen:
+	go generate ./...
+
+clean:
+	find . -name "*.gen.*" -type f -delete
