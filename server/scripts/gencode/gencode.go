@@ -170,7 +170,7 @@ func generateStubs(c *Config) error {
 	}
 	for path, methods := range c.Routes {
 		for _, route := range methods {
-			handlerFnPath := filepath.Join(flagOutDir, toSnakeCase(route.Name)+".go")
+			handlerFnPath := filepath.Join(flagOutDir, "handler_"+toSnakeCase(route.Name)+".go")
 			handlerFnCode := fmt.Sprintf(
 				handlerFnTemplate,
 				flagPackageName,
@@ -408,12 +408,17 @@ func sendOK(w http.ResponseWriter, code int, body interface{}) {
 					if typ == "string" {
 						r += fmt.Sprintf("    %s := req.URL.Query().Get(\"%s\")\n", lowerVarName, toSnakeCase(propertyName))
 					} else {
-						r += fmt.Sprintf("    %s, err := strconv.Atoi(req.URL.Query().Get(\"%s\"))\n", lowerVarName, toSnakeCase(propertyName))
+
+						r += fmt.Sprintf("%s := 0\n", lowerVarName)
+						r += fmt.Sprintf("if req.URL.Query().Get(\"%s\") != \"\" {\n", toSnakeCase(propertyName))
+						r += fmt.Sprintf("q, err := strconv.Atoi(req.URL.Query().Get(\"%s\"))\n", toSnakeCase(propertyName))
 						r += fmt.Sprintf(`if err != nil {
 							sendError(w, http.StatusBadRequest, err)
 							return
 						}`)
 						r += "\n"
+						r += fmt.Sprintf("%s = q", lowerVarName)
+						r += "}\n"
 
 					}
 				}

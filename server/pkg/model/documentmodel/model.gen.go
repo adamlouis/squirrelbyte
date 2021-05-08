@@ -6,25 +6,12 @@
 package documentmodel
 
 type JSONObject map[string]interface{}
-type QueryDocumentsRequest struct {
-	PageToken string        `json:"page_token"`
-	Select    []interface{} `json:"select"`
-	GroupBy   []interface{} `json:"group_by"`
-	OrderBy   []interface{} `json:"order_by"`
-	Where     interface{}   `json:"where"`
-	Limit     int           `json:"limit"`
-}
-type QueryDocumentsResponse struct {
-	Result        []interface{} `json:"result"`
-	NextPageToken string        `json:"next_page_token"`
-	Insights      JSONObject    `json:"insights"`
-}
 type Document struct {
-	UpdatedAt string     `json:"updated_at"`
 	ID        string     `json:"id"`
 	Header    JSONObject `json:"header"`
 	Body      JSONObject `json:"body"`
 	CreatedAt string     `json:"created_at"`
+	UpdatedAt string     `json:"updated_at"`
 }
 type ListDocumentsQueryParams struct {
 	PageToken string `json:"page_token"`
@@ -33,6 +20,19 @@ type ListDocumentsQueryParams struct {
 type ListDocumentsResponse struct {
 	Documents     []*Document `json:"documents"`
 	NextPageToken string      `json:"next_page_token"`
+}
+type QueryDocumentsRequest struct {
+	Select    []interface{} `json:"select"`
+	GroupBy   []interface{} `json:"group_by"`
+	OrderBy   []interface{} `json:"order_by"`
+	Where     interface{}   `json:"where"`
+	Limit     int           `json:"limit"`
+	PageToken string        `json:"page_token"`
+}
+type QueryDocumentsResponse struct {
+	Result        []interface{} `json:"result"`
+	NextPageToken string        `json:"next_page_token"`
+	Insights      JSONObject    `json:"insights"`
 }
 type GetDocumentPathParams struct {
 	DocumentID string

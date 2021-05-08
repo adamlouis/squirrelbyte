@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -101,12 +102,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// db, err := newDB(c)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer db.Close() // nolint
-
 	// go func() {
 	// 	// TODO: break out - jobs, docs, scheduler, secrets
 	// 	jobClient := client.NewHTTPJobClient("http://localhost:9922")
@@ -114,12 +109,44 @@ func main() {
 	// 	sc.Run(ctx)
 	// }()
 
+	documentDB, err := newDB(c, "document.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer documentDB.Close()
+
+	jobDB, err := newDB(c, "job.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer jobDB.Close()
+
+	oauthDB, err := newDB(c, "oauth.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer oauthDB.Close()
+
+	secretDB, err := newDB(c, "secret.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer secretDB.Close()
+
+	schedulerDB, err := newDB(c, "scheduler.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer schedulerDB.Close()
+
 	router := mux.NewRouter()
-	documentserver.RegisterRouter(documentserver.NewAPIHandler(), router)
-	jobserver.RegisterRouter(jobserver.NewAPIHandler(), router)
-	oauthserver.RegisterRouter(oauthserver.NewAPIHandler(), router)
-	secretserver.RegisterRouter(secretserver.NewAPIHandler(), router)
-	schedulerserver.RegisterRouter(schedulerserver.NewAPIHandler(), router)
+	documentserver.RegisterRouter(documentserver.NewAPIHandler(documentDB), router)
+	jobserver.RegisterRouter(jobserver.NewAPIHandler(jobDB), router)
+	oauthserver.RegisterRouter(oauthserver.NewAPIHandler(oauthDB), router)
+	secretserver.RegisterRouter(secretserver.NewAPIHandler(secretDB), router)
+	schedulerserver.RegisterRouter(schedulerserver.NewAPIHandler(schedulerDB), router)
+
+	router.Use(basicLoggerMiddleware)
 
 	srv := &http.Server{
 		Handler:      router,
@@ -179,4 +206,22 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
+}
+
+func basicLoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+		next.ServeHTTP(w, r)
+		// todo: produce just 1 structured event per req w/ all metadata
+		// todo: do w/ tracing / opentelemetry, start a span, pass down context, etc
+		j, _ := json.Marshal(map[string]interface{}{
+			"type":        "REQUEST",
+			"method":      r.Method,
+			"name":        fmt.Sprintf("%s:%s", r.URL.Path, r.Method),
+			"duration_ms": time.Since(now) / time.Millisecond,
+			"path":        r.URL.Path,
+			"time":        time.Now().Format(time.RFC3339),
+		})
+		fmt.Println(string(j))
+	})
 }

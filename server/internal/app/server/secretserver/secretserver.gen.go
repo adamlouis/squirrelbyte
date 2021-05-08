@@ -29,8 +29,8 @@ type APIHandler interface {
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
 	h := apiHandlerToHTTPHandler(apiHandler)
 	r.Handle("/secrets", http.HandlerFunc(h.ListSecrets)).Methods(http.MethodGet)
-	r.Handle("/secrets/{key}", http.HandlerFunc(h.PutSecret)).Methods(http.MethodPut)
 	r.Handle("/secrets/{key}", http.HandlerFunc(h.GetSecret)).Methods(http.MethodGet)
+	r.Handle("/secrets/{key}", http.HandlerFunc(h.PutSecret)).Methods(http.MethodPut)
 }
 func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
 	return &httpHandler{
@@ -68,10 +68,14 @@ type errorResponse struct {
 
 func (h *httpHandler) ListSecrets(w http.ResponseWriter, req *http.Request) {
 	pageTokenQueryParam := req.URL.Query().Get("page_token")
-	pageSizeQueryParam, err := strconv.Atoi(req.URL.Query().Get("page_size"))
-	if err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
+	pageSizeQueryParam := 0
+	if req.URL.Query().Get("page_size") != "" {
+		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
+		if err != nil {
+			sendError(w, http.StatusBadRequest, err)
+			return
+		}
+		pageSizeQueryParam = q
 	}
 	queryParams := secretmodel.ListSecretsRequest{
 		PageToken: pageTokenQueryParam,

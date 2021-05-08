@@ -6,7 +6,8 @@ import (
 
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/documentmodel"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 )
 
 // why this indirection here
@@ -14,7 +15,7 @@ import (
 // yagni?
 
 // APIDocumentToInternalDocument returns the API representation of document form the internal representation
-func APIDocumentToInternalDocument(d *model.Document) (*document.Document, error) {
+func APIDocumentToInternalDocument(d *documentmodel.Document) (*document.Document, error) {
 	if d == nil {
 		return nil, nil
 	}
@@ -37,7 +38,7 @@ func APIDocumentToInternalDocument(d *model.Document) (*document.Document, error
 }
 
 // InternalDocumentToAPIDocument returns the internal representation of a document from the API representation
-func InternalDocumentToAPIDocument(d *document.Document) (*model.Document, error) {
+func InternalDocumentToAPIDocument(d *document.Document) (*documentmodel.Document, error) {
 	if d == nil {
 		return nil, nil
 	}
@@ -54,7 +55,7 @@ func InternalDocumentToAPIDocument(d *document.Document) (*model.Document, error
 		return nil, err
 	}
 
-	return &model.Document{
+	return &documentmodel.Document{
 		ID:        d.ID,
 		Header:    h,
 		Body:      b,
@@ -64,12 +65,12 @@ func InternalDocumentToAPIDocument(d *document.Document) (*model.Document, error
 }
 
 // InternalDocumentsToAPIDocuments returns the internal representation of documents from the API representation
-func InternalDocumentsToAPIDocuments(ds []*document.Document) ([]*model.Document, error) {
+func InternalDocumentsToAPIDocuments(ds []*document.Document) ([]*documentmodel.Document, error) {
 	if ds == nil {
 		return nil, nil
 	}
 
-	r := make([]*model.Document, len(ds))
+	r := make([]*documentmodel.Document, len(ds))
 	for i := range ds {
 		a, err := InternalDocumentToAPIDocument(ds[i])
 		if err != nil {
@@ -93,7 +94,7 @@ func ToInternalTime(s string) (time.Time, error) {
 }
 
 // APIJobToInternalJob returns the API representation of job form the internal representation
-func APIJobToInternalJob(j *model.Job) (*job.Job, error) {
+func APIJobToInternalJob(j *jobmodel.Job) (*job.Job, error) {
 
 	input, err := json.Marshal(j.Input)
 	if err != nil {
@@ -119,7 +120,7 @@ func APIJobToInternalJob(j *model.Job) (*job.Job, error) {
 }
 
 // InternalJobToAPIJob returns the internal representation of a job from the API representation
-func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
+func InternalJobToAPIJob(j *job.Job) (*jobmodel.Job, error) {
 
 	var input map[string]interface{}
 	err := json.Unmarshal(j.Input, &input)
@@ -141,7 +142,7 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 		sf = sptr(ToAPITime(*j.ScheduledFor))
 	}
 
-	return &model.Job{
+	return &jobmodel.Job{
 		ID:           j.ID,
 		Name:         j.Name,
 		Status:       string(j.Status),
@@ -156,11 +157,11 @@ func InternalJobToAPIJob(j *job.Job) (*model.Job, error) {
 }
 
 // InternalJobsToAPIJobs returns the internal representation of jobs from the API representation
-func InternalJobsToAPIJobs(js []*job.Job) ([]*model.Job, error) {
+func InternalJobsToAPIJobs(js []*job.Job) ([]*jobmodel.Job, error) {
 	if js == nil {
 		return nil, nil
 	}
-	r := make([]*model.Job, len(js))
+	r := make([]*jobmodel.Job, len(js))
 	for i := range js {
 		j, err := InternalJobToAPIJob(js[i])
 		if err != nil {

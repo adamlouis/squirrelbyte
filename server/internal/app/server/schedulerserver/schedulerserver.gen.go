@@ -16,18 +16,18 @@ import (
 )
 
 type HTTPHandler interface {
-	GetScheduler(w http.ResponseWriter, req *http.Request)
-	PutScheduler(w http.ResponseWriter, req *http.Request)
-	DeleteScheduler(w http.ResponseWriter, req *http.Request)
 	ListSchedulers(w http.ResponseWriter, req *http.Request)
 	PostScheduler(w http.ResponseWriter, req *http.Request)
+	PutScheduler(w http.ResponseWriter, req *http.Request)
+	DeleteScheduler(w http.ResponseWriter, req *http.Request)
+	GetScheduler(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
-	ListSchedulers(ctx context.Context, queryParams *schedulermodel.ListSchedulersRequest) (*schedulermodel.ListSchedulersResponse, int, error)
-	PostScheduler(ctx context.Context, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, int, error)
 	GetScheduler(ctx context.Context, pathParams *schedulermodel.GetSchedulerPathParams) (*schedulermodel.Scheduler, int, error)
 	PutScheduler(ctx context.Context, pathParams *schedulermodel.PutSchedulerPathParams, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, int, error)
 	DeleteScheduler(ctx context.Context, pathParams *schedulermodel.DeleteSchedulerPathParams) (int, error)
+	ListSchedulers(ctx context.Context, queryParams *schedulermodel.ListSchedulersRequest) (*schedulermodel.ListSchedulersResponse, int, error)
+	PostScheduler(ctx context.Context, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, int, error)
 }
 
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
@@ -74,10 +74,14 @@ type errorResponse struct {
 
 func (h *httpHandler) ListSchedulers(w http.ResponseWriter, req *http.Request) {
 	pageTokenQueryParam := req.URL.Query().Get("page_token")
-	pageSizeQueryParam, err := strconv.Atoi(req.URL.Query().Get("page_size"))
-	if err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
+	pageSizeQueryParam := 0
+	if req.URL.Query().Get("page_size") != "" {
+		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
+		if err != nil {
+			sendError(w, http.StatusBadRequest, err)
+			return
+		}
+		pageSizeQueryParam = q
 	}
 	queryParams := schedulermodel.ListSchedulersRequest{
 		PageToken: pageTokenQueryParam,

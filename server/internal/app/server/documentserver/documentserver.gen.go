@@ -16,12 +16,12 @@ import (
 )
 
 type HTTPHandler interface {
-	QueryDocuments(w http.ResponseWriter, req *http.Request)
 	ListDocuments(w http.ResponseWriter, req *http.Request)
 	PostDocument(w http.ResponseWriter, req *http.Request)
 	GetDocument(w http.ResponseWriter, req *http.Request)
 	PutDocument(w http.ResponseWriter, req *http.Request)
 	DeleteDocument(w http.ResponseWriter, req *http.Request)
+	QueryDocuments(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
 	ListDocuments(ctx context.Context, queryParams *documentmodel.ListDocumentsQueryParams) (*documentmodel.ListDocumentsResponse, int, error)
@@ -34,12 +34,12 @@ type APIHandler interface {
 
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
 	h := apiHandlerToHTTPHandler(apiHandler)
+	r.Handle("/documents", http.HandlerFunc(h.ListDocuments)).Methods(http.MethodGet)
+	r.Handle("/documents", http.HandlerFunc(h.PostDocument)).Methods(http.MethodPost)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.GetDocument)).Methods(http.MethodGet)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.PutDocument)).Methods(http.MethodPut)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.DeleteDocument)).Methods(http.MethodDelete)
 	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
-	r.Handle("/documents", http.HandlerFunc(h.PostDocument)).Methods(http.MethodPost)
-	r.Handle("/documents", http.HandlerFunc(h.ListDocuments)).Methods(http.MethodGet)
 }
 func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
 	return &httpHandler{
@@ -75,6 +75,58 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
+func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
+	pageTokenQueryParam := req.URL.Query().Get("page_token")
+	pageSizeQueryParam := 0
+	if req.URL.Query().Get("page_size") != "" {
+		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
+		if err != nil {
+			sendError(w, http.StatusBadRequest, err)
+			return
+		}
+		pageSizeQueryParam = q
+	}
+	queryParams := documentmodel.ListDocumentsQueryParams{
+		PageSize:  pageSizeQueryParam,
+		PageToken: pageTokenQueryParam,
+	}
+	r, code, err := h.apiHandler.ListDocuments(req.Context(), &queryParams)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, r)
+}
+func (h *httpHandler) PostDocument(w http.ResponseWriter, req *http.Request) {
+	var requestBody documentmodel.Document
+	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+		sendError(w, http.StatusBadRequest, err)
+		return
+	}
+	r, code, err := h.apiHandler.PostDocument(req.Context(), &requestBody)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, r)
+}
+func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	documentID, ok := vars["documentID"]
+	if !ok {
+		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
+		return
+	}
+	pathParams := documentmodel.DeleteDocumentPathParams{
+		DocumentID: documentID,
+	}
+	code, err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, struct{}{})
+}
 func (h *httpHandler) GetDocument(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	documentID, ok := vars["documentID"]
@@ -114,23 +166,6 @@ func (h *httpHandler) PutDocument(w http.ResponseWriter, req *http.Request) {
 	}
 	sendOK(w, code, r)
 }
-func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	documentID, ok := vars["documentID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
-		return
-	}
-	pathParams := documentmodel.DeleteDocumentPathParams{
-		DocumentID: documentID,
-	}
-	code, err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, struct{}{})
-}
 func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
 	var requestBody documentmodel.QueryDocumentsRequest
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
@@ -138,37 +173,6 @@ func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	r, code, err := h.apiHandler.QueryDocuments(req.Context(), &requestBody)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
-	pageTokenQueryParam := req.URL.Query().Get("page_token")
-	pageSizeQueryParam, err := strconv.Atoi(req.URL.Query().Get("page_size"))
-	if err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
-	}
-	queryParams := documentmodel.ListDocumentsQueryParams{
-		PageToken: pageTokenQueryParam,
-		PageSize:  pageSizeQueryParam,
-	}
-	r, code, err := h.apiHandler.ListDocuments(req.Context(), &queryParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) PostDocument(w http.ResponseWriter, req *http.Request) {
-	var requestBody documentmodel.Document
-	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
-	}
-	r, code, err := h.apiHandler.PostDocument(req.Context(), &requestBody)
 	if err != nil {
 		sendError(w, code, err)
 		return

@@ -16,8 +16,6 @@ import (
 )
 
 type HTTPHandler interface {
-	ClaimJob(w http.ResponseWriter, req *http.Request)
-	ReleaseJob(w http.ResponseWriter, req *http.Request)
 	SetJobSuccess(w http.ResponseWriter, req *http.Request)
 	SetJobError(w http.ResponseWriter, req *http.Request)
 	ListJobs(w http.ResponseWriter, req *http.Request)
@@ -25,8 +23,11 @@ type HTTPHandler interface {
 	DeleteJob(w http.ResponseWriter, req *http.Request)
 	QueueJob(w http.ResponseWriter, req *http.Request)
 	ClaimSomeJob(w http.ResponseWriter, req *http.Request)
+	ClaimJob(w http.ResponseWriter, req *http.Request)
+	ReleaseJob(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
+	SetJobSuccess(ctx context.Context, pathParams *jobmodel.SetJobSuccessPathParams) (*jobmodel.Job, int, error)
 	SetJobError(ctx context.Context, pathParams *jobmodel.SetJobErrorPathParams) (*jobmodel.Job, int, error)
 	ListJobs(ctx context.Context, queryParams *jobmodel.ListJobsQueryParams) (*jobmodel.ListJobsResponse, int, error)
 	GetJob(ctx context.Context, pathParams *jobmodel.GetJobPathParams) (*jobmodel.Job, int, error)
@@ -35,12 +36,10 @@ type APIHandler interface {
 	ClaimSomeJob(ctx context.Context, body *jobmodel.ClaimSomeJobRequest) (*jobmodel.Job, int, error)
 	ClaimJob(ctx context.Context, pathParams *jobmodel.ClaimJobPathParams) (*jobmodel.Job, int, error)
 	ReleaseJob(ctx context.Context, pathParams *jobmodel.ReleaseJobPathParams) (*jobmodel.Job, int, error)
-	SetJobSuccess(ctx context.Context, pathParams *jobmodel.SetJobSuccessPathParams) (*jobmodel.Job, int, error)
 }
 
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
 	h := apiHandlerToHTTPHandler(apiHandler)
-	r.Handle("/jobs", http.HandlerFunc(h.ListJobs)).Methods(http.MethodGet)
 	r.Handle("/jobs/{jobID}", http.HandlerFunc(h.GetJob)).Methods(http.MethodGet)
 	r.Handle("/jobs/{jobID}", http.HandlerFunc(h.DeleteJob)).Methods(http.MethodDelete)
 	r.Handle("/jobs:queue", http.HandlerFunc(h.QueueJob)).Methods(http.MethodPost)
@@ -49,6 +48,7 @@ func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
 	r.Handle("/jobs/{jobID}:release", http.HandlerFunc(h.ReleaseJob)).Methods(http.MethodPost)
 	r.Handle("/jobs/{jobID}:success", http.HandlerFunc(h.SetJobSuccess)).Methods(http.MethodPost)
 	r.Handle("/jobs/{jobID}:error", http.HandlerFunc(h.SetJobError)).Methods(http.MethodPost)
+	r.Handle("/jobs", http.HandlerFunc(h.ListJobs)).Methods(http.MethodGet)
 }
 func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
 	return &httpHandler{
@@ -84,11 +84,32 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
-func (h *httpHandler) ListJobs(w http.ResponseWriter, req *http.Request) {
-	pageSizeQueryParam, err := strconv.Atoi(req.URL.Query().Get("page_size"))
-	if err != nil {
-		sendError(w, http.StatusBadRequest, err)
+func (h *httpHandler) SetJobError(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	jobID, ok := vars["jobID"]
+	if !ok {
+		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid jobID path parameter"))
 		return
+	}
+	pathParams := jobmodel.SetJobErrorPathParams{
+		JobID: jobID,
+	}
+	r, code, err := h.apiHandler.SetJobError(req.Context(), &pathParams)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, r)
+}
+func (h *httpHandler) ListJobs(w http.ResponseWriter, req *http.Request) {
+	pageSizeQueryParam := 0
+	if req.URL.Query().Get("page_size") != "" {
+		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
+		if err != nil {
+			sendError(w, http.StatusBadRequest, err)
+			return
+		}
+		pageSizeQueryParam = q
 	}
 	pageTokenQueryParam := req.URL.Query().Get("page_token")
 	queryParams := jobmodel.ListJobsQueryParams{
@@ -202,23 +223,6 @@ func (h *httpHandler) SetJobSuccess(w http.ResponseWriter, req *http.Request) {
 		JobID: jobID,
 	}
 	r, code, err := h.apiHandler.SetJobSuccess(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) SetJobError(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	jobID, ok := vars["jobID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid jobID path parameter"))
-		return
-	}
-	pathParams := jobmodel.SetJobErrorPathParams{
-		JobID: jobID,
-	}
-	r, code, err := h.apiHandler.SetJobError(req.Context(), &pathParams)
 	if err != nil {
 		sendError(w, code, err)
 		return

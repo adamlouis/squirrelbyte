@@ -7,24 +7,24 @@ package schedulermodel
 
 type JSONObject map[string]interface{}
 type Scheduler struct {
+	JobName  string     `json:"job_name"`
 	Input    JSONObject `json:"input"`
 	Schedule string     `json:"schedule"`
-	JobName  string     `json:"job_name"`
 }
 type ListSchedulersRequest struct {
-	PageToken string `json:"page_token"`
 	PageSize  int    `json:"page_size"`
+	PageToken string `json:"page_token"`
 }
 type ListSchedulersResponse struct {
-	Schedulers    []*Scheduler `json:"schedulers"`
 	NextPageToken string       `json:"next_page_token"`
-}
-type PutSchedulerPathParams struct {
-	SchedulerID string
+	Schedulers    []*Scheduler `json:"schedulers"`
 }
 type DeleteSchedulerPathParams struct {
 	SchedulerID string
 }
 type GetSchedulerPathParams struct {
+	SchedulerID string
+}
+type PutSchedulerPathParams struct {
 	SchedulerID string
 }
