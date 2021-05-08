@@ -37,6 +37,7 @@ routes:
   /jobs:queue:
     POST:
       name: QueueJob
+      request_body: "*Job"
       response_body: "*Job"
   /jobs:claim:
     POST:

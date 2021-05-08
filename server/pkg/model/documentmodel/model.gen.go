@@ -7,11 +7,11 @@ package documentmodel
 
 type JSONObject map[string]interface{}
 type Document struct {
-	ID        string     `json:"id"`
-	Header    JSONObject `json:"header"`
 	Body      JSONObject `json:"body"`
 	CreatedAt string     `json:"created_at"`
 	UpdatedAt string     `json:"updated_at"`
+	ID        string     `json:"id"`
+	Header    JSONObject `json:"header"`
 }
 type ListDocumentsQueryParams struct {
 	PageToken string `json:"page_token"`

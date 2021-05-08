@@ -1,3 +1,4 @@
+// an opinionated code generator for generating boilerplate from yml
 package main
 
 import (

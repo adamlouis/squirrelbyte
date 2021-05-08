@@ -23,11 +23,11 @@ type HTTPHandler interface {
 	PutOAuthConfig(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
-	GetOAuthConfig(ctx context.Context, pathParams *oauthmodel.GetOAuthConfigPathParams, body *oauthmodel.Config) (*oauthmodel.Config, int, error)
-	PutOAuthConfig(ctx context.Context, pathParams *oauthmodel.PutOAuthConfigPathParams, body *oauthmodel.Config) (*oauthmodel.Config, int, error)
 	ListProviders(ctx context.Context, queryParams *oauthmodel.ListOAuthProvidersRequest) (*oauthmodel.ListOAuthProvidersResponse, int, error)
 	GetOAuthAuthorizationURL(ctx context.Context, pathParams *oauthmodel.GetOAuthAuthorizationURLPathParams) (*oauthmodel.GetOAuthAuthorizationURLResponse, int, error)
 	GetOAuthToken(ctx context.Context, pathParams *oauthmodel.GetOAuthTokenPathParams, body *oauthmodel.GetOAuthTokenRequest) (*oauthmodel.Token, int, error)
+	GetOAuthConfig(ctx context.Context, pathParams *oauthmodel.GetOAuthConfigPathParams, body *oauthmodel.Config) (*oauthmodel.Config, int, error)
+	PutOAuthConfig(ctx context.Context, pathParams *oauthmodel.PutOAuthConfigPathParams, body *oauthmodel.Config) (*oauthmodel.Config, int, error)
 }
 
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
@@ -72,6 +72,45 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
+func (h *httpHandler) GetOAuthAuthorizationURL(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name, ok := vars["name"]
+	if !ok {
+		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid name path parameter"))
+		return
+	}
+	pathParams := oauthmodel.GetOAuthAuthorizationURLPathParams{
+		Name: name,
+	}
+	r, code, err := h.apiHandler.GetOAuthAuthorizationURL(req.Context(), &pathParams)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, r)
+}
+func (h *httpHandler) GetOAuthToken(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name, ok := vars["name"]
+	if !ok {
+		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid name path parameter"))
+		return
+	}
+	pathParams := oauthmodel.GetOAuthTokenPathParams{
+		Name: name,
+	}
+	var requestBody oauthmodel.GetOAuthTokenRequest
+	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+		sendError(w, http.StatusBadRequest, err)
+		return
+	}
+	r, code, err := h.apiHandler.GetOAuthToken(req.Context(), &pathParams, &requestBody)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, r)
+}
 func (h *httpHandler) GetOAuthConfig(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name, ok := vars["name"]
@@ -128,49 +167,10 @@ func (h *httpHandler) ListProviders(w http.ResponseWriter, req *http.Request) {
 		pageSizeQueryParam = q
 	}
 	queryParams := oauthmodel.ListOAuthProvidersRequest{
-		PageToken: pageTokenQueryParam,
 		PageSize:  pageSizeQueryParam,
+		PageToken: pageTokenQueryParam,
 	}
 	r, code, err := h.apiHandler.ListProviders(req.Context(), &queryParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) GetOAuthAuthorizationURL(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name, ok := vars["name"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid name path parameter"))
-		return
-	}
-	pathParams := oauthmodel.GetOAuthAuthorizationURLPathParams{
-		Name: name,
-	}
-	r, code, err := h.apiHandler.GetOAuthAuthorizationURL(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) GetOAuthToken(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name, ok := vars["name"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid name path parameter"))
-		return
-	}
-	pathParams := oauthmodel.GetOAuthTokenPathParams{
-		Name: name,
-	}
-	var requestBody oauthmodel.GetOAuthTokenRequest
-	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
-	}
-	r, code, err := h.apiHandler.GetOAuthToken(req.Context(), &pathParams, &requestBody)
 	if err != nil {
 		sendError(w, code, err)
 		return

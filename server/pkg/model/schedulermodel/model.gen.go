@@ -12,19 +12,19 @@ type Scheduler struct {
 	Schedule string     `json:"schedule"`
 }
 type ListSchedulersRequest struct {
-	PageSize  int    `json:"page_size"`
 	PageToken string `json:"page_token"`
+	PageSize  int    `json:"page_size"`
 }
 type ListSchedulersResponse struct {
-	NextPageToken string       `json:"next_page_token"`
 	Schedulers    []*Scheduler `json:"schedulers"`
-}
-type DeleteSchedulerPathParams struct {
-	SchedulerID string
+	NextPageToken string       `json:"next_page_token"`
 }
 type GetSchedulerPathParams struct {
 	SchedulerID string
 }
 type PutSchedulerPathParams struct {
+	SchedulerID string
+}
+type DeleteSchedulerPathParams struct {
 	SchedulerID string
 }

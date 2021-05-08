@@ -18,9 +18,9 @@ import (
 type HTTPHandler interface {
 	ListDocuments(w http.ResponseWriter, req *http.Request)
 	PostDocument(w http.ResponseWriter, req *http.Request)
-	GetDocument(w http.ResponseWriter, req *http.Request)
 	PutDocument(w http.ResponseWriter, req *http.Request)
 	DeleteDocument(w http.ResponseWriter, req *http.Request)
+	GetDocument(w http.ResponseWriter, req *http.Request)
 	QueryDocuments(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
@@ -34,12 +34,12 @@ type APIHandler interface {
 
 func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
 	h := apiHandlerToHTTPHandler(apiHandler)
+	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
 	r.Handle("/documents", http.HandlerFunc(h.ListDocuments)).Methods(http.MethodGet)
 	r.Handle("/documents", http.HandlerFunc(h.PostDocument)).Methods(http.MethodPost)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.GetDocument)).Methods(http.MethodGet)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.PutDocument)).Methods(http.MethodPut)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.DeleteDocument)).Methods(http.MethodDelete)
-	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
 }
 func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
 	return &httpHandler{
@@ -87,8 +87,8 @@ func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
 		pageSizeQueryParam = q
 	}
 	queryParams := documentmodel.ListDocumentsQueryParams{
-		PageSize:  pageSizeQueryParam,
 		PageToken: pageTokenQueryParam,
+		PageSize:  pageSizeQueryParam,
 	}
 	r, code, err := h.apiHandler.ListDocuments(req.Context(), &queryParams)
 	if err != nil {
@@ -109,23 +109,6 @@ func (h *httpHandler) PostDocument(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	sendOK(w, code, r)
-}
-func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	documentID, ok := vars["documentID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
-		return
-	}
-	pathParams := documentmodel.DeleteDocumentPathParams{
-		DocumentID: documentID,
-	}
-	code, err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, struct{}{})
 }
 func (h *httpHandler) GetDocument(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -165,6 +148,23 @@ func (h *httpHandler) PutDocument(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	sendOK(w, code, r)
+}
+func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	documentID, ok := vars["documentID"]
+	if !ok {
+		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
+		return
+	}
+	pathParams := documentmodel.DeleteDocumentPathParams{
+		DocumentID: documentID,
+	}
+	code, err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
+	if err != nil {
+		sendError(w, code, err)
+		return
+	}
+	sendOK(w, code, struct{}{})
 }
 func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
 	var requestBody documentmodel.QueryDocumentsRequest

@@ -78,8 +78,8 @@ func (h *httpHandler) ListSecrets(w http.ResponseWriter, req *http.Request) {
 		pageSizeQueryParam = q
 	}
 	queryParams := secretmodel.ListSecretsRequest{
-		PageToken: pageTokenQueryParam,
 		PageSize:  pageSizeQueryParam,
+		PageToken: pageTokenQueryParam,
 	}
 	r, code, err := h.apiHandler.ListSecrets(req.Context(), &queryParams)
 	if err != nil {

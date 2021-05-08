@@ -5,11 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/adamlouis/squirrelbyte/server/internal/app/server/serverdef"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -134,7 +132,7 @@ func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 	err := row.StructScan(&r)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, serverdef.NewHTTPErrorFromString(http.StatusNotFound, fmt.Sprintf("job %s not found", id))
+			return nil, fmt.Errorf("job %s not found", id) // TODO: 404
 		}
 		return nil, err
 	}

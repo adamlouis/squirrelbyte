@@ -146,7 +146,7 @@ func main() {
 	secretserver.RegisterRouter(secretserver.NewAPIHandler(secretDB), router)
 	schedulerserver.RegisterRouter(schedulerserver.NewAPIHandler(schedulerDB), router)
 
-	router.Use(basicLoggerMiddleware)
+	router.Use(loggerMiddleware)
 
 	srv := &http.Server{
 		Handler:      router,
@@ -208,12 +208,12 @@ func main() {
 	// }
 }
 
-func basicLoggerMiddleware(next http.Handler) http.Handler {
+func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		next.ServeHTTP(w, r)
-		// todo: produce just 1 structured event per req w/ all metadata
-		// todo: do w/ tracing / opentelemetry, start a span, pass down context, etc
+		// TODO: produce just 1 structured event per req w/ all metadata
+		// TODO: do w/ tracing / opentelemetry, start a span, pass down context, etc
 		j, _ := json.Marshal(map[string]interface{}{
 			"type":        "REQUEST",
 			"method":      r.Method,

@@ -1,8 +1,15 @@
 package jobserver
 
-import "github.com/jmoiron/sqlx"
+import (
+	"context"
+
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job/jobsqlite3"
+	"github.com/jmoiron/sqlx"
+)
 
 func NewAPIHandler(db *sqlx.DB) APIHandler {
+	jobsqlite3.NewJobRepository(db).Init(context.Background())
 	return &hdl{
 		db: db,
 	}
@@ -10,4 +17,15 @@ func NewAPIHandler(db *sqlx.DB) APIHandler {
 
 type hdl struct {
 	db *sqlx.DB
+}
+
+type CommitFn func() error
+type RollbackFn func() error
+
+func (h *hdl) GetRepository() (job.Repository, CommitFn, RollbackFn, error) {
+	tx, err := h.db.Beginx()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return jobsqlite3.NewJobRepository(tx), tx.Commit, tx.Rollback, nil
 }

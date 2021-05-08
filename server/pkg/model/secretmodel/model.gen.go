@@ -10,12 +10,12 @@ type Secret struct {
 	Value interface{} `json:"value"`
 }
 type ListSecretsRequest struct {
-	PageToken string `json:"page_token"`
 	PageSize  int    `json:"page_size"`
+	PageToken string `json:"page_token"`
 }
 type ListSecretsResponse struct {
-	Secrets       []*Secret `json:"secrets"`
 	NextPageToken string    `json:"next_page_token"`
+	Secrets       []*Secret `json:"secrets"`
 }
 type GetSecretPathParams struct {
 	Key string

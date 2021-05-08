@@ -6,16 +6,19 @@
 package jobmodel
 
 type JSONObject map[string]interface{}
+type ClaimSomeJobRequest struct {
+	Names []string `json:"names"`
+}
 type Job struct {
-	ScheduledFor *string    `json:"scheduled_for"`
-	SucceededAt  *string    `json:"succeeded_at"`
-	ClaimedAt    *string    `json:"claimed_at"`
-	CreatedAt    string     `json:"created_at"`
 	UpdatedAt    string     `json:"updated_at"`
 	ID           string     `json:"id"`
+	Name         string     `json:"name"`
 	Status       string     `json:"status"`
 	Input        JSONObject `json:"input"`
-	Name         string     `json:"name"`
+	ClaimedAt    *string    `json:"claimed_at"`
+	CreatedAt    string     `json:"created_at"`
+	ScheduledFor *string    `json:"scheduled_for"`
+	SucceededAt  *string    `json:"succeeded_at"`
 	ErroredAt    *string    `json:"errored_at"`
 }
 type ListJobsQueryParams struct {
@@ -23,16 +26,13 @@ type ListJobsQueryParams struct {
 	PageToken string `json:"page_token"`
 }
 type ListJobsResponse struct {
-	NextPageToken string `json:"next_page_token"`
 	Jobs          []*Job `json:"jobs"`
-}
-type ClaimSomeJobRequest struct {
-	Names []string `json:"names"`
-}
-type DeleteJobPathParams struct {
-	JobID string
+	NextPageToken string `json:"next_page_token"`
 }
 type GetJobPathParams struct {
+	JobID string
+}
+type DeleteJobPathParams struct {
 	JobID string
 }
 type ClaimJobPathParams struct {
