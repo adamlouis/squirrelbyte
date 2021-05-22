@@ -2,36 +2,18 @@ package scheduler
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/adamlouis/squirrelbyte/server/pkg/client"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
-	"github.com/robfig/cron/v3"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/schedulermodel"
 )
 
-// TODO - api & persistence, let caller do
-
-type Scheduler interface {
-	Run(ctx context.Context)
+type Repository interface {
+	Put(ctx context.Context, scheduler *schedulermodel.Scheduler) (*schedulermodel.Scheduler, error)
+	Get(ctx context.Context, id string) (*schedulermodel.Scheduler, error)
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, body *schedulermodel.ListSchedulersRequest) (*schedulermodel.ListSchedulersResponse, error)
 }
 
-func NewScheduler(jobClient client.JobClient) Scheduler {
-	return &schd{
-		jobClient: jobClient,
-	}
-}
-
-type schd struct {
-	jobClient client.JobClient
-}
-
-func (sc *schd) Run(ctx context.Context) {
-	c := cron.New()
-
-	c.AddFunc("0 * * * *", func() {
-		err := sc.jobClient.Queue(ctx, "hackernews.GetTop", model.EmptyJSON())
-		fmt.Println("scheduling!", err)
-	})
-
-	c.Run()
+type Runner interface {
+	Run(ctx context.Context) error
+	Update(ctx context.Context, id string)
 }

@@ -1,15 +1,12 @@
 package jobserver
 
 import (
-	"context"
-
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job/jobsqlite3"
 	"github.com/jmoiron/sqlx"
 )
 
 func NewAPIHandler(db *sqlx.DB) APIHandler {
-	jobsqlite3.NewJobRepository(db).Init(context.Background())
 	return &hdl{
 		db: db,
 	}

@@ -1,8 +1,7 @@
 // GENERATED
 // DO NOT EDIT
 // GENERATOR: scripts/gencode/gencode.go
-// ARGUMENTS: '--component server --config ../../../../config/api.scheduler.yml --package schedulerserver --out-dir . --out ./schedulerserver.gen.go --model-package github.com/adamlouis/squirrelbyte/server/pkg/model/schedulermodel'
-
+// ARGUMENTS: --component server --config ../../../../config/api.scheduler.yml --package schedulerserver --out-dir . --out ./schedulerserver.gen.go --model-package github.com/adamlouis/squirrelbyte/server/pkg/model/schedulermodel
 package schedulerserver
 
 import (
@@ -23,33 +22,48 @@ type HTTPHandler interface {
 	DeleteScheduler(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
-	ListSchedulers(ctx context.Context, queryParams *schedulermodel.ListSchedulersRequest) (*schedulermodel.ListSchedulersResponse, int, error)
-	PostScheduler(ctx context.Context, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, int, error)
-	GetScheduler(ctx context.Context, pathParams *schedulermodel.GetSchedulerPathParams) (*schedulermodel.Scheduler, int, error)
-	PutScheduler(ctx context.Context, pathParams *schedulermodel.PutSchedulerPathParams, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, int, error)
-	DeleteScheduler(ctx context.Context, pathParams *schedulermodel.DeleteSchedulerPathParams) (int, error)
+	ListSchedulers(ctx context.Context, queryParams *schedulermodel.ListSchedulersRequest) (*schedulermodel.ListSchedulersResponse, error)
+	PostScheduler(ctx context.Context, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, error)
+	GetScheduler(ctx context.Context, pathParams *schedulermodel.GetSchedulerPathParams) (*schedulermodel.Scheduler, error)
+	PutScheduler(ctx context.Context, pathParams *schedulermodel.PutSchedulerPathParams, body *schedulermodel.Scheduler) (*schedulermodel.Scheduler, error)
+	DeleteScheduler(ctx context.Context, pathParams *schedulermodel.DeleteSchedulerPathParams) error
 }
 
-func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
-	h := apiHandlerToHTTPHandler(apiHandler)
+func RegisterRouter(apiHandler APIHandler, r *mux.Router, c ErrorCoder) {
+	h := apiHandlerToHTTPHandler(apiHandler, c)
 	r.Handle("/schedulers", http.HandlerFunc(h.ListSchedulers)).Methods(http.MethodGet)
 	r.Handle("/schedulers", http.HandlerFunc(h.PostScheduler)).Methods(http.MethodPost)
 	r.Handle("/schedulers/{schedulerID}", http.HandlerFunc(h.GetScheduler)).Methods(http.MethodGet)
 	r.Handle("/schedulers/{schedulerID}", http.HandlerFunc(h.PutScheduler)).Methods(http.MethodPut)
 	r.Handle("/schedulers/{schedulerID}", http.HandlerFunc(h.DeleteScheduler)).Methods(http.MethodDelete)
 }
-func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
+
+func apiHandlerToHTTPHandler(apiHandler APIHandler, errorCoder ErrorCoder) HTTPHandler {
 	return &httpHandler{
 		apiHandler: apiHandler,
+		errorCoder: errorCoder,
 	}
 }
 
 type httpHandler struct {
 	apiHandler APIHandler
+	errorCoder ErrorCoder
 }
 
+type ErrorCoder func(e error) int
+
 // sendError sends an error response
-func sendError(w http.ResponseWriter, code int, err error) {
+func (h *httpHandler) sendError(w http.ResponseWriter, err error) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(h.errorCoder(err))
+	e := json.NewEncoder(w)
+	e.SetEscapeHTML(false)
+	e.Encode(&errorResponse{
+		Message: err.Error(),
+	})
+}
+
+func sendErrorWithCode(w http.ResponseWriter, code int, err error) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	e := json.NewEncoder(w)
@@ -60,8 +74,12 @@ func sendError(w http.ResponseWriter, code int, err error) {
 }
 
 // sendOK sends an success response
-func sendOK(w http.ResponseWriter, code int, body interface{}) {
+func sendOK(w http.ResponseWriter, body interface{}) {
 	w.Header().Add("Content-Type", "application/json")
+	code := http.StatusOK
+	if body == nil {
+		code = http.StatusNoContent
+	}
 	w.WriteHeader(code)
 	e := json.NewEncoder(w)
 	e.SetEscapeHTML(false)
@@ -72,69 +90,13 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
-func (h *httpHandler) GetScheduler(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	schedulerID, ok := vars["schedulerID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid schedulerID path parameter"))
-		return
-	}
-	pathParams := schedulermodel.GetSchedulerPathParams{
-		SchedulerID: schedulerID,
-	}
-	r, code, err := h.apiHandler.GetScheduler(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) PutScheduler(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	schedulerID, ok := vars["schedulerID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid schedulerID path parameter"))
-		return
-	}
-	pathParams := schedulermodel.PutSchedulerPathParams{
-		SchedulerID: schedulerID,
-	}
-	var requestBody schedulermodel.Scheduler
-	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
-		return
-	}
-	r, code, err := h.apiHandler.PutScheduler(req.Context(), &pathParams, &requestBody)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, r)
-}
-func (h *httpHandler) DeleteScheduler(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	schedulerID, ok := vars["schedulerID"]
-	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid schedulerID path parameter"))
-		return
-	}
-	pathParams := schedulermodel.DeleteSchedulerPathParams{
-		SchedulerID: schedulerID,
-	}
-	code, err := h.apiHandler.DeleteScheduler(req.Context(), &pathParams)
-	if err != nil {
-		sendError(w, code, err)
-		return
-	}
-	sendOK(w, code, struct{}{})
-}
 func (h *httpHandler) ListSchedulers(w http.ResponseWriter, req *http.Request) {
 	pageTokenQueryParam := req.URL.Query().Get("page_token")
 	pageSizeQueryParam := 0
 	if req.URL.Query().Get("page_size") != "" {
 		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
 		if err != nil {
-			sendError(w, http.StatusBadRequest, err)
+			sendErrorWithCode(w, http.StatusBadRequest, err)
 			return
 		}
 		pageSizeQueryParam = q
@@ -143,23 +105,79 @@ func (h *httpHandler) ListSchedulers(w http.ResponseWriter, req *http.Request) {
 		PageToken: pageTokenQueryParam,
 		PageSize:  pageSizeQueryParam,
 	}
-	r, code, err := h.apiHandler.ListSchedulers(req.Context(), &queryParams)
+	r, err := h.apiHandler.ListSchedulers(req.Context(), &queryParams)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }
 func (h *httpHandler) PostScheduler(w http.ResponseWriter, req *http.Request) {
 	var requestBody schedulermodel.Scheduler
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
+		sendErrorWithCode(w, http.StatusBadRequest, err)
 		return
 	}
-	r, code, err := h.apiHandler.PostScheduler(req.Context(), &requestBody)
+	r, err := h.apiHandler.PostScheduler(req.Context(), &requestBody)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
+}
+func (h *httpHandler) GetScheduler(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	schedulerID, ok := vars["schedulerID"]
+	if !ok {
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid schedulerID path parameter"))
+		return
+	}
+	pathParams := schedulermodel.GetSchedulerPathParams{
+		SchedulerID: schedulerID,
+	}
+	r, err := h.apiHandler.GetScheduler(req.Context(), &pathParams)
+	if err != nil {
+		h.sendError(w, err)
+		return
+	}
+	sendOK(w, r)
+}
+func (h *httpHandler) PutScheduler(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	schedulerID, ok := vars["schedulerID"]
+	if !ok {
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid schedulerID path parameter"))
+		return
+	}
+	pathParams := schedulermodel.PutSchedulerPathParams{
+		SchedulerID: schedulerID,
+	}
+	var requestBody schedulermodel.Scheduler
+	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+		sendErrorWithCode(w, http.StatusBadRequest, err)
+		return
+	}
+	r, err := h.apiHandler.PutScheduler(req.Context(), &pathParams, &requestBody)
+	if err != nil {
+		h.sendError(w, err)
+		return
+	}
+	sendOK(w, r)
+}
+func (h *httpHandler) DeleteScheduler(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	schedulerID, ok := vars["schedulerID"]
+	if !ok {
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid schedulerID path parameter"))
+		return
+	}
+	pathParams := schedulermodel.DeleteSchedulerPathParams{
+		SchedulerID: schedulerID,
+	}
+	err := h.apiHandler.DeleteScheduler(req.Context(), &pathParams)
+	if err != nil {
+		h.sendError(w, err)
+		return
+	}
+	sendOK(w, struct{}{})
 }

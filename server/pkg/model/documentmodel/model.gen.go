@@ -1,17 +1,16 @@
 // GENERATED
 // DO NOT EDIT
 // GENERATOR: scripts/gencode/gencode.go
-// ARGUMENTS: '--component model --config ../../config/api.document.yml --package documentmodel --out ./documentmodel/model.gen.go'
-
+// ARGUMENTS: --component model --config ../../config/api.document.yml --package documentmodel --out ./documentmodel/model.gen.go
 package documentmodel
 
 type JSONObject map[string]interface{}
 type Document struct {
+	ID        string     `json:"id"`
+	Header    JSONObject `json:"header"`
 	Body      JSONObject `json:"body"`
 	CreatedAt string     `json:"created_at"`
 	UpdatedAt string     `json:"updated_at"`
-	ID        string     `json:"id"`
-	Header    JSONObject `json:"header"`
 }
 type ListDocumentsQueryParams struct {
 	PageToken string `json:"page_token"`

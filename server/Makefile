@@ -20,3 +20,4 @@ gen:
 
 clean:
 	find . -name "*.gen.*" -type f -delete
+	find . -name "*.db" -type f -delete

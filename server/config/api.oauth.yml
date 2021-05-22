@@ -1,17 +1,15 @@
 objects:
   Config:
+    Name: string
     ClientID: string
     ClientSecret: string
-    Endpoint: "*Endpoint"
-    RedirectURL: string
-    Scopes: "[]string"
-    AdditionalAuthorizationURLParams: "[]*URLParam"
-  URLParam:
-    Key: string
-    Value: string
-  Endpoint:
     AuthURL: string
     TokenURL: string
+    RedirectURL: string
+    Scopes: "[]string"
+    AuthURLParams: "map[string]string"
+    CreatedAt: string
+    UpdatedAt: string
   Token:
     AccessToken: string
     TokenType: string
@@ -49,9 +47,10 @@ routes:
   /oauth/providers/{name}/config:
     GET:
       name: GetOAuthConfig
-      request_body: "*Config"
       response_body: "*Config"
     PUT:
       name: PutOAuthConfig
       request_body: "*Config"
       response_body: "*Config"
+    DELETE:
+      name: DeleteOAuthConfig

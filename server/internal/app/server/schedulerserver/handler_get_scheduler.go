@@ -2,12 +2,16 @@ package schedulerserver
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/schedulermodel"
 )
 
-func (h *hdl) GetScheduler(ctx context.Context, pathParams *schedulermodel.GetSchedulerPathParams) (*schedulermodel.Scheduler, int, error) {
-	return nil, http.StatusInternalServerError, fmt.Errorf("unimplemented")
+func (h *hdl) GetScheduler(ctx context.Context, pathParams *schedulermodel.GetSchedulerPathParams) (*schedulermodel.Scheduler, error) {
+	repo, _, rollback, err := h.GetRepository()
+	if err != nil {
+		return nil, err
+	}
+	defer rollback()
+
+	return repo.Get(ctx, pathParams.SchedulerID)
 }

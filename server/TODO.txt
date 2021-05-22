@@ -6,22 +6,26 @@ X remove output field ... think on it ... optional?
 X write results to document server
 X trigger job from within worker
 X scheduler to queue jobs on cron, or whatever
-- secrets / oauth
-- scheduler API / crud
+X secrets / oauth
+X scheduler API / crud
+X continuous deployment for personal stack
+x client generation
+X something for db migrations
+X no intermediate model layer
+X http errs
+x snake_cas
+
+- CRUD UIs per service
+- exploration UI
+- config init
+
 - document - multiple dbs? multiple tables?
 - graceful worker shutdown
 - websocket api for worker rather than poll
-- better interfaces for integration ... send error?
-- exploration UI
+- better interfaces for worker integration ... send error?
 - allow read conncurrency on server, inc connection limit
 - strava webhook
-- something for db migrations
-- continuous deployment for personal stack
 - open source singlenode infrastructure?
 - per-api limiting (strava, spotify, hn, etc)?
 - per-job name rate limiting?
 
-
-documents|jobs|schedule|secrets
-documents/hn.item.123
-documents/spotify/hn.item.123

@@ -12,7 +12,7 @@ import { Modal } from './standard/Modal';
 import { Button } from './standard/Button';
 
 const Sizes = {
-  DefaultRowHeight: 30,
+  DefaultRowHeight: 33,
   DefaultColumnWidth: 256,
   DefaultMinColumnWidth: 30,
   ReRenderSizeThreshold: 5,
@@ -115,7 +115,6 @@ const getColumnWidthPreferences = () => {
 };
 
 const later = async (fn) => fn();
-
 export function JSONGrid(props) {
   const [gridWidth, setGridWidth] = useState(0);
   const [gridHeight, setGridHeight] = useState(
@@ -129,7 +128,7 @@ export function JSONGrid(props) {
     try {
       const el = bodyContainerRef.current;
       const w = el?.getBoundingClientRect().width || 0;
-      const h = el?.getBoundingClientRect().height || 0;
+      const h = el?.getBoundingClientRect().height - 33 || 0;
       if (Math.abs(gridWidth - w) > Sizes.ReRenderSizeThreshold) {
         setGridWidth(w);
       }
@@ -328,6 +327,7 @@ function DraggableHeader(props) {
       key={path}
       ref={elementRef}
       style={{
+        height: '33px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',

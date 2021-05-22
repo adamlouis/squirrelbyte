@@ -1,8 +1,7 @@
 // GENERATED
 // DO NOT EDIT
 // GENERATOR: scripts/gencode/gencode.go
-// ARGUMENTS: '--component server --config ../../../../config/api.document.yml --package documentserver --out-dir . --out ./documentserver.gen.go --model-package github.com/adamlouis/squirrelbyte/server/pkg/model/documentmodel'
-
+// ARGUMENTS: --component server --config ../../../../config/api.document.yml --package documentserver --out-dir . --out ./documentserver.gen.go --model-package github.com/adamlouis/squirrelbyte/server/pkg/model/documentmodel
 package documentserver
 
 import (
@@ -18,41 +17,56 @@ import (
 type HTTPHandler interface {
 	ListDocuments(w http.ResponseWriter, req *http.Request)
 	PostDocument(w http.ResponseWriter, req *http.Request)
+	GetDocument(w http.ResponseWriter, req *http.Request)
 	PutDocument(w http.ResponseWriter, req *http.Request)
 	DeleteDocument(w http.ResponseWriter, req *http.Request)
-	GetDocument(w http.ResponseWriter, req *http.Request)
 	QueryDocuments(w http.ResponseWriter, req *http.Request)
 }
 type APIHandler interface {
-	ListDocuments(ctx context.Context, queryParams *documentmodel.ListDocumentsQueryParams) (*documentmodel.ListDocumentsResponse, int, error)
-	PostDocument(ctx context.Context, body *documentmodel.Document) (*documentmodel.Document, int, error)
-	GetDocument(ctx context.Context, pathParams *documentmodel.GetDocumentPathParams) (*documentmodel.Document, int, error)
-	PutDocument(ctx context.Context, pathParams *documentmodel.PutDocumentPathParams, body *documentmodel.Document) (*documentmodel.Document, int, error)
-	DeleteDocument(ctx context.Context, pathParams *documentmodel.DeleteDocumentPathParams) (int, error)
-	QueryDocuments(ctx context.Context, body *documentmodel.QueryDocumentsRequest) (*documentmodel.QueryDocumentsResponse, int, error)
+	ListDocuments(ctx context.Context, queryParams *documentmodel.ListDocumentsQueryParams) (*documentmodel.ListDocumentsResponse, error)
+	PostDocument(ctx context.Context, body *documentmodel.Document) (*documentmodel.Document, error)
+	GetDocument(ctx context.Context, pathParams *documentmodel.GetDocumentPathParams) (*documentmodel.Document, error)
+	PutDocument(ctx context.Context, pathParams *documentmodel.PutDocumentPathParams, body *documentmodel.Document) (*documentmodel.Document, error)
+	DeleteDocument(ctx context.Context, pathParams *documentmodel.DeleteDocumentPathParams) error
+	QueryDocuments(ctx context.Context, body *documentmodel.QueryDocumentsRequest) (*documentmodel.QueryDocumentsResponse, error)
 }
 
-func RegisterRouter(apiHandler APIHandler, r *mux.Router) {
-	h := apiHandlerToHTTPHandler(apiHandler)
-	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
+func RegisterRouter(apiHandler APIHandler, r *mux.Router, c ErrorCoder) {
+	h := apiHandlerToHTTPHandler(apiHandler, c)
 	r.Handle("/documents", http.HandlerFunc(h.ListDocuments)).Methods(http.MethodGet)
 	r.Handle("/documents", http.HandlerFunc(h.PostDocument)).Methods(http.MethodPost)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.GetDocument)).Methods(http.MethodGet)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.PutDocument)).Methods(http.MethodPut)
 	r.Handle("/documents/{documentID}", http.HandlerFunc(h.DeleteDocument)).Methods(http.MethodDelete)
+	r.Handle("/documents:query", http.HandlerFunc(h.QueryDocuments)).Methods(http.MethodPost)
 }
-func apiHandlerToHTTPHandler(apiHandler APIHandler) HTTPHandler {
+
+func apiHandlerToHTTPHandler(apiHandler APIHandler, errorCoder ErrorCoder) HTTPHandler {
 	return &httpHandler{
 		apiHandler: apiHandler,
+		errorCoder: errorCoder,
 	}
 }
 
 type httpHandler struct {
 	apiHandler APIHandler
+	errorCoder ErrorCoder
 }
 
+type ErrorCoder func(e error) int
+
 // sendError sends an error response
-func sendError(w http.ResponseWriter, code int, err error) {
+func (h *httpHandler) sendError(w http.ResponseWriter, err error) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(h.errorCoder(err))
+	e := json.NewEncoder(w)
+	e.SetEscapeHTML(false)
+	e.Encode(&errorResponse{
+		Message: err.Error(),
+	})
+}
+
+func sendErrorWithCode(w http.ResponseWriter, code int, err error) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	e := json.NewEncoder(w)
@@ -63,8 +77,12 @@ func sendError(w http.ResponseWriter, code int, err error) {
 }
 
 // sendOK sends an success response
-func sendOK(w http.ResponseWriter, code int, body interface{}) {
+func sendOK(w http.ResponseWriter, body interface{}) {
 	w.Header().Add("Content-Type", "application/json")
+	code := http.StatusOK
+	if body == nil {
+		code = http.StatusNoContent
+	}
 	w.WriteHeader(code)
 	e := json.NewEncoder(w)
 	e.SetEscapeHTML(false)
@@ -81,7 +99,7 @@ func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Query().Get("page_size") != "" {
 		q, err := strconv.Atoi(req.URL.Query().Get("page_size"))
 		if err != nil {
-			sendError(w, http.StatusBadRequest, err)
+			sendErrorWithCode(w, http.StatusBadRequest, err)
 			return
 		}
 		pageSizeQueryParam = q
@@ -90,48 +108,48 @@ func (h *httpHandler) ListDocuments(w http.ResponseWriter, req *http.Request) {
 		PageToken: pageTokenQueryParam,
 		PageSize:  pageSizeQueryParam,
 	}
-	r, code, err := h.apiHandler.ListDocuments(req.Context(), &queryParams)
+	r, err := h.apiHandler.ListDocuments(req.Context(), &queryParams)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }
 func (h *httpHandler) PostDocument(w http.ResponseWriter, req *http.Request) {
 	var requestBody documentmodel.Document
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
+		sendErrorWithCode(w, http.StatusBadRequest, err)
 		return
 	}
-	r, code, err := h.apiHandler.PostDocument(req.Context(), &requestBody)
+	r, err := h.apiHandler.PostDocument(req.Context(), &requestBody)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }
 func (h *httpHandler) GetDocument(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	documentID, ok := vars["documentID"]
 	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid documentID path parameter"))
 		return
 	}
 	pathParams := documentmodel.GetDocumentPathParams{
 		DocumentID: documentID,
 	}
-	r, code, err := h.apiHandler.GetDocument(req.Context(), &pathParams)
+	r, err := h.apiHandler.GetDocument(req.Context(), &pathParams)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }
 func (h *httpHandler) PutDocument(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	documentID, ok := vars["documentID"]
 	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid documentID path parameter"))
 		return
 	}
 	pathParams := documentmodel.PutDocumentPathParams{
@@ -139,43 +157,43 @@ func (h *httpHandler) PutDocument(w http.ResponseWriter, req *http.Request) {
 	}
 	var requestBody documentmodel.Document
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
+		sendErrorWithCode(w, http.StatusBadRequest, err)
 		return
 	}
-	r, code, err := h.apiHandler.PutDocument(req.Context(), &pathParams, &requestBody)
+	r, err := h.apiHandler.PutDocument(req.Context(), &pathParams, &requestBody)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }
 func (h *httpHandler) DeleteDocument(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	documentID, ok := vars["documentID"]
 	if !ok {
-		sendError(w, http.StatusInternalServerError, fmt.Errorf("invalid documentID path parameter"))
+		sendErrorWithCode(w, http.StatusBadRequest, fmt.Errorf("invalid documentID path parameter"))
 		return
 	}
 	pathParams := documentmodel.DeleteDocumentPathParams{
 		DocumentID: documentID,
 	}
-	code, err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
+	err := h.apiHandler.DeleteDocument(req.Context(), &pathParams)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, struct{}{})
+	sendOK(w, struct{}{})
 }
 func (h *httpHandler) QueryDocuments(w http.ResponseWriter, req *http.Request) {
 	var requestBody documentmodel.QueryDocumentsRequest
 	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
-		sendError(w, http.StatusBadRequest, err)
+		sendErrorWithCode(w, http.StatusBadRequest, err)
 		return
 	}
-	r, code, err := h.apiHandler.QueryDocuments(req.Context(), &requestBody)
+	r, err := h.apiHandler.QueryDocuments(req.Context(), &requestBody)
 	if err != nil {
-		sendError(w, code, err)
+		h.sendError(w, err)
 		return
 	}
-	sendOK(w, code, r)
+	sendOK(w, r)
 }

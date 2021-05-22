@@ -1,65 +1,116 @@
+import _ from 'lodash';
 import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Loader } from './components/standard/Loader';
 import { OnLoad } from './data/OnLoad';
 
 import { Header } from './components/Header';
+import { MainDataView } from './components/MainDataView';
+import { MainJobView } from './components/MainJobView';
+import { MainSchedulerView } from './components/MainSchedulerView';
+import { MainKVView } from './components/MainKVView';
+import { MainOAuthView } from './components/MainOAuthView';
 import { InfoBox } from './components/InfoBox';
 import { JSONQueryForm } from './components/JSONQueryForm';
 import { runQuery, getQueryFromURL } from './data/QueryController';
 import { QueryResultView } from './components/QueryResultView';
+import { Colors } from './utils/Colors';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect,
+  useLocation,
+} from 'react-router-dom';
 
 const Body = styled.div`
-  padding: 0px 20px;
+  flex-grow: 1;
+  padding: 0px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
 `;
 
-const ResultView = styled.div`
-  min-height: 750px;
-  width: 100%;
-  height: 100%;
+const TabRow = styled.div`
   display: flex;
+`;
+const Tab = styled.div`
+  display: flex;
+  align-items: center;
   justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+  :hover {
+    background-color: ${Colors.GrayD};
+  }
+  background-color: ${(p) => (p.selected ? Colors.GrayD : '')};
 `;
 
 OnLoad();
 
-function App() {
-  const [queryResult, setQueryResult] = useState(undefined);
-  const [loading, setLoading] = useState(false);
-
-  const queryFromURLRef = useRef(getQueryFromURL());
-
-  const run = async (query) => {
-    setLoading(true);
-    setQueryResult(undefined);
-    setQueryResult(await runQuery(query));
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    // on load, run query from URL if there is one
-    if (queryFromURLRef.current) {
-      run(queryFromURLRef.current);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onSubmitJSONQueryForm = (j) => run(j);
-
+function Nav() {
+  const location = useLocation();
   return (
-    <div>
+    <TabRow>
+      <Link to="/documents">
+        <Tab selected={_.startsWith(location.pathname, '/documents')}>
+          documents
+        </Tab>
+      </Link>
+      <Link to="/jobs">
+        <Tab selected={_.startsWith(location.pathname, '/jobs')}>jobs</Tab>
+      </Link>
+      <Link to="/schedulers">
+        <Tab selected={_.startsWith(location.pathname, '/schedulers')}>
+          schedulers
+        </Tab>
+      </Link>
+      <Link to="/kvs">
+        <Tab selected={_.startsWith(location.pathname, '/kvs')}>key-values</Tab>
+      </Link>
+      <Link to="/oauth">
+        <Tab selected={_.startsWith(location.pathname, '/oauth')}>oauth</Tab>
+      </Link>
+    </TabRow>
+  );
+}
+
+function App() {
+  return (
+    <div
+      style={{
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <Header />
-      <Body>
-        <InfoBox />
-        <JSONQueryForm
-          initialValue={queryFromURLRef.current}
-          onSubmit={onSubmitJSONQueryForm}
-        />
-        <ResultView>
-          {loading && <Loader size={'25px'} borderSize={'5px'} />}
-          {queryResult && <QueryResultView queryResult={queryResult} />}
-        </ResultView>
-      </Body>
+      <Router>
+        <Body>
+          <Nav />
+          <Switch>
+            <Route path="/documents">
+              <MainDataView />
+            </Route>
+            <Route path="/jobs">
+              <MainJobView />
+            </Route>
+            <Route path="/schedulers">
+              <MainSchedulerView />
+            </Route>
+            <Route path="/kvs">
+              <MainKVView />
+            </Route>
+            <Route path="/oauth">
+              <MainOAuthView />
+            </Route>
+            <Route>
+              <Redirect push to="/documents" />
+            </Route>
+          </Switch>
+        </Body>
+      </Router>
     </div>
   );
 }

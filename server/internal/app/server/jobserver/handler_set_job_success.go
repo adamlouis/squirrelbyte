@@ -2,32 +2,25 @@ package jobserver
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 )
 
-func (h *hdl) SetJobSuccess(ctx context.Context, pathParams *jobmodel.SetJobSuccessPathParams) (*jobmodel.Job, int, error) {
+func (h *hdl) SetJobSuccess(ctx context.Context, pathParams *jobmodel.SetJobSuccessPathParams) (*jobmodel.Job, error) {
 	repo, commit, rollback, err := h.GetRepository()
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 	defer rollback() //nolint
 
-	succeeded, err := repo.Success(ctx, pathParams.JobID)
+	out, err := repo.Success(ctx, pathParams.JobID)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
 	if err = commit(); err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
-	out, err := present.InternalJobToAPIJob(succeeded)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-
-	return out, http.StatusOK, nil
+	return out, nil
 }

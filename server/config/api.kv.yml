@@ -1,0 +1,29 @@
+objects:
+  KV:
+    Key: string
+    Value: "interface{}"
+    CreatedAt: string
+    UpdatedAt: string
+  ListKVsRequest:
+    PageToken: "string"
+    PageSize: "int"
+  ListKVsResponse:
+    Kvs: "[]*KV"
+    NextPageToken: string
+
+routes:
+  /kvs:
+    GET:
+      name: ListKVs
+      query_params: "*ListKVsRequest"
+      response_body: "*ListKVsResponse"
+  /kvs/{key}:
+    GET:
+      name: GetKV
+      response_body: "*KV"
+    PUT:
+      name: PutKV
+      request_body: "*KV"
+      response_body: "*KV"
+    DELETE:
+      name: DeleteKV

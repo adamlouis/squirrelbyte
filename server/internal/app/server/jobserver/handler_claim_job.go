@@ -2,39 +2,32 @@ package jobserver
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
-	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 )
 
-func (h *hdl) ClaimJob(ctx context.Context, pathParams *jobmodel.ClaimJobPathParams) (*jobmodel.Job, int, error) {
+func (h *hdl) ClaimJob(ctx context.Context, pathParams *jobmodel.ClaimJobPathParams) (*jobmodel.Job, error) {
 	repo, commit, rollback, err := h.GetRepository()
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 	defer rollback() //nolint
 
-	claimed, err := repo.Claim(ctx, job.ClaimOptions{
+	out, err := repo.Claim(ctx, &job.ClaimOptions{
 		JobID: pathParams.JobID,
 	})
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
-	if claimed == nil {
-		return nil, http.StatusNoContent, nil
+	if out == nil {
+		return nil, nil
 	}
 
 	if err = commit(); err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
-	out, err := present.InternalJobToAPIJob(claimed)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-
-	return out, http.StatusOK, nil
+	return out, nil
 }

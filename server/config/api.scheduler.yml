@@ -3,9 +3,12 @@ types:
 
 objects:
   Scheduler:
+    ID: string
     Schedule: string
     JobName: string
     Input: JSONObject
+    CreatedAt: string
+    UpdatedAt: string
   ListSchedulersRequest:
     PageToken: string
     PageSize: int

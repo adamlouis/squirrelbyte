@@ -2,12 +2,16 @@ package oauthserver
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/oauthmodel"
 )
 
-func (h *hdl) GetOAuthConfig(ctx context.Context, pathParams *oauthmodel.GetOAuthConfigPathParams, body *oauthmodel.Config) (*oauthmodel.Config, int, error) {
-	return nil, http.StatusInternalServerError, fmt.Errorf("unimplemented")
+func (h *hdl) GetOAuthConfig(ctx context.Context, pathParams *oauthmodel.GetOAuthConfigPathParams) (*oauthmodel.Config, error) {
+	repo, _, rollback, err := h.GetRepository()
+	if err != nil {
+		return nil, err
+	}
+	defer rollback() //nolint
+
+	return repo.GetConfig(ctx, pathParams.Name)
 }

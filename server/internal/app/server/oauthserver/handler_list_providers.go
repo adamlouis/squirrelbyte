@@ -2,12 +2,16 @@ package oauthserver
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/oauthmodel"
 )
 
-func (h *hdl) ListProviders(ctx context.Context, queryParams *oauthmodel.ListOAuthProvidersRequest) (*oauthmodel.ListOAuthProvidersResponse, int, error) {
-	return nil, http.StatusInternalServerError, fmt.Errorf("unimplemented")
+func (h *hdl) ListProviders(ctx context.Context, queryParams *oauthmodel.ListOAuthProvidersRequest) (*oauthmodel.ListOAuthProvidersResponse, error) {
+	repo, _, rollback, err := h.GetRepository()
+	if err != nil {
+		return nil, err
+	}
+	defer rollback() //nolint
+
+	return repo.ListProviders(ctx, queryParams)
 }

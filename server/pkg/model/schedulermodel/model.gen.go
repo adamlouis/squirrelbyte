@@ -1,15 +1,17 @@
 // GENERATED
 // DO NOT EDIT
 // GENERATOR: scripts/gencode/gencode.go
-// ARGUMENTS: '--component model --config ../../config/api.scheduler.yml --package schedulermodel --out ./schedulermodel/model.gen.go'
-
+// ARGUMENTS: --component model --config ../../config/api.scheduler.yml --package schedulermodel --out ./schedulermodel/model.gen.go
 package schedulermodel
 
 type JSONObject map[string]interface{}
 type Scheduler struct {
-	JobName  string     `json:"job_name"`
-	Input    JSONObject `json:"input"`
-	Schedule string     `json:"schedule"`
+	ID        string     `json:"id"`
+	Schedule  string     `json:"schedule"`
+	JobName   string     `json:"job_name"`
+	Input     JSONObject `json:"input"`
+	CreatedAt string     `json:"created_at"`
+	UpdatedAt string     `json:"updated_at"`
 }
 type ListSchedulersRequest struct {
 	PageToken string `json:"page_token"`

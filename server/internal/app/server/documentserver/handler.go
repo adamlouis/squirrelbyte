@@ -1,16 +1,12 @@
 package documentserver
 
 import (
-	"context"
-
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/document/documentsqlite3"
 	"github.com/jmoiron/sqlx"
 )
 
 func NewAPIHandler(db *sqlx.DB) APIHandler {
-	documentsqlite3.NewDocumentRepository(db).Init(context.Background())
-
 	return &hdl{
 		db: db,
 	}

@@ -3,12 +3,18 @@ package jobsqlite3
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"embed"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/crudutil"
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/errtype"
 	"github.com/adamlouis/squirrelbyte/server/internal/pkg/job"
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
+	"github.com/adamlouis/squirrelbyte/server/internal/pkg/sqlite3util"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -23,42 +29,8 @@ type jobRepo struct {
 	db sqlx.Ext
 }
 
-const (
-	datetimeFormat = "2006-01-02 15:04:05" // note: no T
-)
-
-// TODO: rwmutex
-
-func (jr *jobRepo) Init(ctx context.Context) error {
-	// todo: real migration, not this string
-	// migrate on startup
-	// fine for now
-	_, err := jr.db.Exec(`
-	CREATE TABLE IF NOT EXISTS job(
-		id TEXT NOT NULL UNIQUE CHECK(id <> ''),
-		name TEXT NOT NULL CHECK(name <> ''),
-		status TEXT NOT NULL CHECK(status <> ''),
-		input TEXT NOT NULL CHECK(json_type(input) == 'object'),
-		succeed_at TEXT NULL,
-		errored_at TEXT NULL,
-		claimed_at TEXT NULL,
-		scheduled_for TEXT NULL,
-		created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL CHECK(id <> ''),
-		updated_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL CHECK(id <> '')
-	);
-
-	CREATE INDEX IF NOT EXISTS job_name ON job(name);
-	CREATE INDEX IF NOT EXISTS job_status ON job(status);
-	CREATE INDEX IF NOT EXISTS job_created_at ON job(created_at);
-	CREATE INDEX IF NOT EXISTS job_scheduled_for ON job(scheduled_for);
-
-	CREATE TRIGGER IF NOT EXISTS set_job_updated_at
-	AFTER UPDATE ON job
-	BEGIN
-		UPDATE job SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
-	END;`)
-	return err
-}
+//go:embed migration/*.sql
+var MigrationFS embed.FS
 
 type jobRow struct {
 	ID           string  `db:"id"`
@@ -73,23 +45,32 @@ type jobRow struct {
 	UpdatedAt    string  `db:"updated_at"`
 }
 
-func (jr *jobRepo) Queue(ctx context.Context, j *job.Job) (*job.Job, error) {
+func (jr *jobRepo) Queue(ctx context.Context, j *jobmodel.Job) (*jobmodel.Job, error) {
 	j.ID = uuid.New().String()
-	j.Status = job.JobStatusQueued
+	j.Status = string(job.JobStatusQueued)
 
 	var scheduledForStr *string
 	if j.ScheduledFor != nil {
-		s := j.ScheduledFor.Format(datetimeFormat)
+		scheduledFor, err := present.ToInternalTime(*j.ScheduledFor)
+		if err != nil {
+			return nil, err
+		}
+		s := scheduledFor.Format(sqlite3util.DatetimeFormat)
 		scheduledForStr = &s
 	}
 
-	_, err := jr.db.Exec(`
+	input, err := json.Marshal(j.Input)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = jr.db.Exec(`
 			INSERT INTO
 				job
 					(id, name, status, input, scheduled_for)
 				VALUES
 					(?, ?, ?, ?, ?)`,
-		j.ID, j.Name, j.Status, j.Input, scheduledForStr)
+		j.ID, j.Name, j.Status, input, scheduledForStr)
 	if err != nil {
 		return nil, err
 	}
@@ -98,28 +79,10 @@ func (jr *jobRepo) Queue(ctx context.Context, j *job.Job) (*job.Job, error) {
 }
 
 func (jr *jobRepo) Delete(ctx context.Context, id string) error {
-	r, err := jr.db.Exec(`DELETE FROM job WHERE id = ?`, id)
-
-	if err != nil {
-		return err
-	}
-
-	ct, err := r.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if ct == 0 {
-		return errors.New("not found")
-	}
-	if ct > 1 {
-		return errors.New("unexpected")
-	}
-
-	return nil
+	return crudutil.Delete(jr.db, `DELETE FROM job WHERE id = ?`, id)
 }
 
-func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
+func (jr *jobRepo) Get(ctx context.Context, id string) (*jobmodel.Job, error) {
 	row := jr.db.QueryRowx(`
 		SELECT
 			id, name, status, input, succeed_at, errored_at, claimed_at, created_at, updated_at, scheduled_for
@@ -132,7 +95,7 @@ func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 	err := row.StructScan(&r)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("job %s not found", id) // TODO: 404
+			return nil, errtype.NotFoundError{Err: err}
 		}
 		return nil, err
 	}
@@ -145,21 +108,41 @@ func (jr *jobRepo) Get(ctx context.Context, id string) (*job.Job, error) {
 	return j, nil
 }
 
-func (jr *jobRepo) List(ctx context.Context, args *job.ListJobArgs) (*job.ListJobResults, error) {
-	rows, err := jr.db.Queryx(`
-	SELECT
-		id, name, status, input, succeed_at, errored_at, claimed_at, created_at, updated_at, scheduled_for
-	FROM job
-	ORDER BY created_at`,
-	)
-	jobs := []*job.Job{}
-
+func (jr *jobRepo) List(ctx context.Context, args *jobmodel.ListJobsQueryParams) (*jobmodel.ListJobsResponse, error) {
+	sz, err := crudutil.GetPageSize(args.PageSize, 500)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return &job.ListJobResults{Jobs: jobs}, nil
-		}
 		return nil, err
 	}
+
+	sb := sq.
+		StatementBuilder.
+		Select("id, name, status, input, succeed_at, errored_at, claimed_at, created_at, updated_at, scheduled_for").
+		From("job").
+		OrderBy("created_at ASC, id ASC").
+		Limit(uint64(sz) + 1) // get n+1 so we know if there's a next page
+
+	offset := uint64(0)
+	if args.PageToken != "" {
+		page := &listJobsPageData{}
+		err := crudutil.DecodePageData(args.PageToken, page)
+		if err != nil {
+			return nil, err
+		}
+		offset = page.Offset
+	}
+	sb = sb.Offset(offset)
+
+	sql, sqlArgs, err := sb.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := jr.db.Queryx(sql, sqlArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	jobs := make([]*jobmodel.Job, 0, sz)
 
 	for rows.Next() {
 		var r jobRow
@@ -173,22 +156,42 @@ func (jr *jobRepo) List(ctx context.Context, args *job.ListJobArgs) (*job.ListJo
 		}
 		jobs = append(jobs, j)
 	}
-	return &job.ListJobResults{Jobs: jobs}, nil
+
+	nextPageToken := ""
+	if len(jobs) > int(sz) {
+		jobs = jobs[0 : len(jobs)-1]
+		s, err := crudutil.EncodePageData(&listJobsPageData{
+			Offset: offset + uint64(len(jobs)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		nextPageToken = s
+	}
+
+	return &jobmodel.ListJobsResponse{
+		Jobs:          jobs,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
+type listJobsPageData struct {
+	Offset uint64 `json:"offset"`
 }
 
 // TODO - handle concurrency, locking, etc
-func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, error) {
+func (jr *jobRepo) Claim(ctx context.Context, opts *job.ClaimOptions) (*jobmodel.Job, error) {
 	sb := sq.
 		StatementBuilder.
 		Select("id, status").
 		From("job").
-		OrderBy("created_at ASC").
+		OrderBy("created_at ASC, id ASC").
 		Where(sq.Eq{"status": job.JobStatusQueued}).
 		Where(sq.Or{
 			sq.Expr("scheduled_for IS NULL"),
 			sq.LtOrEq{"scheduled_for": "CURRENT_TIMESTAMP"},
 		}).
-		Limit(1) // get n+1 so we know if there's a next page
+		Limit(1)
 
 	if opts.JobID != "" {
 		sb = sb.Where(sq.Eq{"id": opts.JobID})
@@ -227,17 +230,17 @@ func (jr *jobRepo) Claim(ctx context.Context, opts job.ClaimOptions) (*job.Job, 
 	return jr.Get(ctx, r.ID)
 }
 
-func (jr *jobRepo) Release(ctx context.Context, id string) (*job.Job, error) {
+func (jr *jobRepo) Release(ctx context.Context, id string) (*jobmodel.Job, error) {
 	j, err := jr.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if j.Status != job.JobStatusClaimed {
+	if j.Status != string(job.JobStatusClaimed) {
 		return nil, fmt.Errorf("only jobs with status CLAIMED can be released - %s has status %s", j.ID, j.Status)
 	}
 
-	j.Status = job.JobStatusQueued
+	j.Status = string(job.JobStatusQueued)
 	_, err = jr.db.Exec(`UPDATE job SET status = ?, claimed_at = NULL WHERE id = ?`, job.JobStatusQueued, j.ID)
 	if err != nil {
 		return nil, err
@@ -245,17 +248,17 @@ func (jr *jobRepo) Release(ctx context.Context, id string) (*job.Job, error) {
 
 	return jr.Get(ctx, id)
 }
-func (jr *jobRepo) Success(ctx context.Context, id string) (*job.Job, error) {
+func (jr *jobRepo) Success(ctx context.Context, id string) (*jobmodel.Job, error) {
 	j, err := jr.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if j.Status != job.JobStatusClaimed {
+	if j.Status != string(job.JobStatusClaimed) {
 		return nil, fmt.Errorf("only jobs with status CLAIMED can be updated with success - %s has status %s", j.ID, j.Status)
 	}
 
-	j.Status = job.JobStatusSuccess
+	j.Status = string(job.JobStatusSuccess)
 	_, err = jr.db.Exec(`UPDATE job SET status = ?, succeed_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusSuccess, j.ID)
 	if err != nil {
 		return nil, err
@@ -263,17 +266,17 @@ func (jr *jobRepo) Success(ctx context.Context, id string) (*job.Job, error) {
 
 	return jr.Get(ctx, id)
 }
-func (jr *jobRepo) Error(ctx context.Context, id string) (*job.Job, error) {
+func (jr *jobRepo) Error(ctx context.Context, id string) (*jobmodel.Job, error) {
 	j, err := jr.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if j.Status != job.JobStatusClaimed {
+	if j.Status != string(job.JobStatusClaimed) {
 		return nil, fmt.Errorf("only jobs with status CLAIMED can be update with error - %s has status %s", j.ID, j.Status)
 	}
 
-	j.Status = job.JobStatusError
+	j.Status = string(job.JobStatusError)
 	_, err = jr.db.Exec(`UPDATE job SET status = ?, errored_at = CURRENT_TIMESTAMP WHERE id = ?`, job.JobStatusError, j.ID)
 	if err != nil {
 		return nil, err
@@ -282,58 +285,65 @@ func (jr *jobRepo) Error(ctx context.Context, id string) (*job.Job, error) {
 	return jr.Get(ctx, id)
 }
 
-func jobRowToJob(r *jobRow) (*job.Job, error) {
-	c, err := time.Parse(datetimeFormat, r.CreatedAt)
+func jobRowToJob(r *jobRow) (*jobmodel.Job, error) {
+	c, err := time.Parse(sqlite3util.DatetimeFormat, r.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := time.Parse(datetimeFormat, r.UpdatedAt)
+	u, err := time.Parse(sqlite3util.DatetimeFormat, r.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	sa, err := tptr(r.SucceededAt)
+	sa, err := toAPITimePtr(r.SucceededAt)
 	if err != nil {
 		return nil, err
 	}
 
-	er, err := tptr(r.ErroredAt)
+	er, err := toAPITimePtr(r.ErroredAt)
 	if err != nil {
 		return nil, err
 	}
 
-	ca, err := tptr(r.ClaimedAt)
+	ca, err := toAPITimePtr(r.ClaimedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	sf, err := tptr(r.ScheduledFor)
+	sf, err := toAPITimePtr(r.ScheduledFor)
 	if err != nil {
 		return nil, err
 	}
 
-	return &job.Job{
+	var input map[string]interface{}
+	err = json.Unmarshal(r.Input, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return &jobmodel.Job{
 		ID:           r.ID,
 		Name:         r.Name,
-		Status:       job.JobStatus(r.Status),
-		Input:        r.Input,
+		Status:       r.Status,
+		Input:        input,
 		SucceededAt:  sa,
 		ErroredAt:    er,
 		ClaimedAt:    ca,
 		ScheduledFor: sf,
-		CreatedAt:    c,
-		UpdatedAt:    u,
+		CreatedAt:    present.ToAPITime(c),
+		UpdatedAt:    present.ToAPITime(u),
 	}, nil
 }
 
-func tptr(s *string) (*time.Time, error) {
+func toAPITimePtr(s *string) (*string, error) {
 	if s != nil {
-		t, err := time.Parse(datetimeFormat, *s)
+		t, err := time.Parse(sqlite3util.DatetimeFormat, *s)
 		if err != nil {
 			return nil, err
 		}
-		return &t, nil
+		apist := present.ToAPITime(t)
+		return &apist, nil
 	}
 	return nil, nil
 }

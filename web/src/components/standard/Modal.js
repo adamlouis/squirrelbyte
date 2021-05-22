@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
+import { subscribeKeyDown } from '../../utils/KeyPublisher';
 
 const Container = styled.div`
   position: fixed;
@@ -37,6 +38,13 @@ export function Modal(props) {
   const onClickOverlay = () => {
     props.onExit();
   };
+
+  useEffect(() => {
+    const unsubscribeEscape = subscribeKeyDown('Escape', false, () => {
+      props.onExit();
+    });
+    return unsubscribeEscape;
+  }, []);
 
   const onClickContent = (e) => {
     e.stopPropagation();

@@ -2,32 +2,25 @@ package jobserver
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/adamlouis/squirrelbyte/server/internal/pkg/present"
 	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 )
 
-func (h *hdl) ReleaseJob(ctx context.Context, pathParams *jobmodel.ReleaseJobPathParams) (*jobmodel.Job, int, error) {
+func (h *hdl) ReleaseJob(ctx context.Context, pathParams *jobmodel.ReleaseJobPathParams) (*jobmodel.Job, error) {
 	repo, commit, rollback, err := h.GetRepository()
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 	defer rollback() //nolint
 
-	released, err := repo.Release(ctx, pathParams.JobID)
+	out, err := repo.Release(ctx, pathParams.JobID)
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
 	if err = commit(); err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, err
 	}
 
-	out, err := present.InternalJobToAPIJob(released)
-	if err != nil {
-		return nil, http.StatusInternalServerError, err
-	}
-
-	return out, http.StatusOK, nil
+	return out, nil
 }
