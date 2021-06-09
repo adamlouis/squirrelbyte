@@ -44,19 +44,28 @@ func (c *client) ListSchedulers(ctx context.Context, queryParams *schedulermodel
 	u.Query().Add("page_token", queryParams.PageToken)
 	u.Query().Add("page_size", strconv.Itoa(queryParams.PageSize))
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodGet, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := schedulermodel.ListSchedulersResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -74,19 +83,28 @@ func (c *client) PostScheduler(ctx context.Context, body *schedulermodel.Schedul
 	} else {
 		requestBody = bytes.NewBuffer(jsonBytes)
 	}
-	req, err := http.NewRequest(http.MethodPost, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := schedulermodel.Scheduler{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -99,19 +117,28 @@ func (c *client) GetScheduler(ctx context.Context, pathParams *schedulermodel.Ge
 		return nil, -1, err
 	}
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodGet, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := schedulermodel.Scheduler{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -129,19 +156,28 @@ func (c *client) PutScheduler(ctx context.Context, pathParams *schedulermodel.Pu
 	} else {
 		requestBody = bytes.NewBuffer(jsonBytes)
 	}
-	req, err := http.NewRequest(http.MethodPut, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := schedulermodel.Scheduler{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -154,15 +190,21 @@ func (c *client) DeleteScheduler(ctx context.Context, pathParams *schedulermodel
 		return -1, err
 	}
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodDelete, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	return resp.StatusCode, nil

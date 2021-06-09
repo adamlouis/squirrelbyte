@@ -45,19 +45,28 @@ func (c *client) ListProviders(ctx context.Context, queryParams *oauthmodel.List
 	u.Query().Add("page_token", queryParams.PageToken)
 	u.Query().Add("page_size", strconv.Itoa(queryParams.PageSize))
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodGet, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := oauthmodel.ListOAuthProvidersResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -70,19 +79,28 @@ func (c *client) GetOAuthAuthorizationURL(ctx context.Context, pathParams *oauth
 		return nil, -1, err
 	}
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodGet, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := oauthmodel.GetOAuthAuthorizationURLResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -100,19 +118,28 @@ func (c *client) GetOAuthToken(ctx context.Context, pathParams *oauthmodel.GetOA
 	} else {
 		requestBody = bytes.NewBuffer(jsonBytes)
 	}
-	req, err := http.NewRequest(http.MethodPost, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := oauthmodel.Token{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -125,19 +152,28 @@ func (c *client) GetOAuthConfig(ctx context.Context, pathParams *oauthmodel.GetO
 		return nil, -1, err
 	}
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodGet, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := oauthmodel.Config{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -155,19 +191,28 @@ func (c *client) PutOAuthConfig(ctx context.Context, pathParams *oauthmodel.PutO
 	} else {
 		requestBody = bytes.NewBuffer(jsonBytes)
 	}
-	req, err := http.NewRequest(http.MethodPut, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return nil, -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	respBody := oauthmodel.Config{}
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if len(respBytes) == 0 {
+		return nil, resp.StatusCode, nil
+	}
+	err = json.Unmarshal(respBytes, &respBody)
 	if err != nil {
 		return nil, resp.StatusCode, err
 	}
@@ -180,15 +225,21 @@ func (c *client) DeleteOAuthConfig(ctx context.Context, pathParams *oauthmodel.D
 		return -1, err
 	}
 	var requestBody io.Reader
-	req, err := http.NewRequest(http.MethodDelete, u.String(), requestBody)
+	req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+	if err != nil {
+		return -1, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return -1, err
 	}
 	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, err
+	}
 	if resp.StatusCode != http.StatusOK {
-		respBytes, _ := ioutil.ReadAll(resp.Body)
 		return resp.StatusCode, fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))
 	}
 	return resp.StatusCode, nil

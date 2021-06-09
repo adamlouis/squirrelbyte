@@ -84,9 +84,11 @@ func sendOK(w http.ResponseWriter, body interface{}) {
 		code = http.StatusNoContent
 	}
 	w.WriteHeader(code)
-	e := json.NewEncoder(w)
-	e.SetEscapeHTML(false)
-	e.Encode(body)
+	if body != nil {
+		e := json.NewEncoder(w)
+		e.SetEscapeHTML(false)
+		e.Encode(body)
+	}
 }
 
 type errorResponse struct {

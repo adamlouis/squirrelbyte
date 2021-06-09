@@ -7,14 +7,16 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/adamlouis/squirrelbyte/server/pkg/client"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/documentclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/jobclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/documentmodel"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/worker"
 )
 
 type Integration struct {
-	JobClient      client.JobClient
-	DocumentClient client.DocumentClient
+	JobClient      jobclient.Client
+	DocumentClient documentclient.Client
 }
 
 type GetItemInput struct {
@@ -43,7 +45,10 @@ func (i *Integration) getTopStoriesFn(ctx context.Context, input map[string]inte
 	}
 
 	for _, id := range ids {
-		err = i.JobClient.Queue(ctx, "hackernews.GetItem", map[string]interface{}{"item_id": id})
+		_, _, err = i.JobClient.QueueJob(ctx, &jobmodel.Job{
+			Name:  "hackernews.GetItem",
+			Input: map[string]interface{}{"item_id": id},
+		})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -75,7 +80,7 @@ func (i *Integration) getItemFn(ctx context.Context, input map[string]interface{
 		return err
 	}
 
-	_, err = i.DocumentClient.Post(ctx, &model.Document{
+	_, _, err = i.DocumentClient.PostDocument(ctx, &documentmodel.Document{
 		ID: fmt.Sprintf("hn.item.%d", inputStruct.ItemID),
 		Header: map[string]interface{}{
 			"api_url": getItemURL(inputStruct.ItemID),

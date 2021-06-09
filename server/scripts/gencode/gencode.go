@@ -467,7 +467,11 @@ func generateClientImpl(c *Config) string {
 			`
 		}
 
-		code += "req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)\n"
+		code += `req, err := http.NewRequest(" + golangMethodByMethod[route.Method] + ", u.String(), requestBody)
+		if err != nil {
+			` + route.getClientDefaultReturn("nil", "-1", "err") + `
+		}
+		`
 
 		code += `req.Header.Set("Content-Type", "application/json")
 		resp, err := client.Do(req)
@@ -475,15 +479,21 @@ func generateClientImpl(c *Config) string {
 			` + route.getClientDefaultReturn("nil", "-1", "err") + `
 		}
 		defer resp.Body.Close()
+		respBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			` + route.getClientDefaultReturn("nil", "resp.StatusCode", "err") + `
+		}
 		if resp.StatusCode != http.StatusOK {
-			respBytes, _ := ioutil.ReadAll(resp.Body)
 			` + route.getClientDefaultReturn("nil", "resp.StatusCode", `fmt.Errorf("[%d] %s", resp.StatusCode, string(respBytes))`) + `
 		}
 		`
 
 		if route.ResponseBody != "" {
 			code += fmt.Sprintf(`respBody := %s{}
-			err = json.NewDecoder(resp.Body).Decode(&respBody)
+			if len(respBytes) == 0 {
+				`+route.getClientDefaultReturn("nil", "resp.StatusCode", "nil")+`
+			}
+			err = json.Unmarshal(respBytes, &respBody)
 			if err != nil {
 				return nil, resp.StatusCode, err
 			}
@@ -564,9 +574,11 @@ func sendOK(w http.ResponseWriter, body interface{}) {
 		code = http.StatusNoContent
 	}
 	w.WriteHeader(code)
-	e := json.NewEncoder(w)
-	e.SetEscapeHTML(false)
-	e.Encode(body)
+	if body != nil {
+		e := json.NewEncoder(w)
+		e.SetEscapeHTML(false)
+		e.Encode(body)
+	}
 }
 
 type errorResponse struct {

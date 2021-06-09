@@ -3,17 +3,18 @@ package worker
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/adamlouis/squirrelbyte/server/pkg/client"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/jobclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
 )
 
 const (
 	errorSleepDuration = time.Second * 1
 )
 
-func NewPollingRunner(jobClient client.JobClient, maxConcurrent int) Runner {
+func NewPollingRunner(jobClient jobclient.Client, maxConcurrent int) Runner {
 	return &rnr{
 		maxConcurrent: maxConcurrent,
 		jobClient:     jobClient,
@@ -24,7 +25,7 @@ func NewPollingRunner(jobClient client.JobClient, maxConcurrent int) Runner {
 
 type rnr struct {
 	maxConcurrent int
-	jobClient     client.JobClient
+	jobClient     jobclient.Client
 	running       bool
 	fnsByName     map[string]WorkerFn
 }
@@ -61,22 +62,21 @@ func (r *rnr) Run(ctx context.Context) error {
 	jobChan := make(chan struct{}, r.maxConcurrent)
 
 	for {
-
-		j, err := r.jobClient.Claim(ctx, &model.ClaimJobRequest{
+		j, s, err := r.jobClient.ClaimSomeJob(ctx, &jobmodel.ClaimSomeJobRequest{
 			Names: jobNames,
 		})
+		if s == http.StatusNoContent {
+			fmt.Println("no jobs queued") // TODO - errs to chan?
+			time.Sleep(errorSleepDuration)
+			continue
+		}
 		if err != nil {
 			fmt.Println(err) // TODO - errs to chan?
 			time.Sleep(errorSleepDuration)
 			continue
 		}
-		if j == nil {
-			fmt.Println("no jobs queued") // TODO - errs to chan?
-			time.Sleep(errorSleepDuration)
-			continue
-		}
 
-		fmt.Println("claimed", j.ID, j.Name)
+		fmt.Println("claimed", j, s, j.ID, j.Name)
 
 		fn := r.fnsByName[j.Name]
 		if fn == nil {
@@ -92,17 +92,18 @@ func (r *rnr) Run(ctx context.Context) error {
 	}
 }
 
-func (r *rnr) do(ctx context.Context, fn WorkerFn, j *model.Job) {
+func (r *rnr) do(ctx context.Context, fn WorkerFn, j *jobmodel.Job) {
 	err := fn(ctx, j.Input)
 	if err != nil {
-		err = r.jobClient.SetError(ctx, j.ID)
+		fmt.Println(err) // TODO: output
+		_, _, err = r.jobClient.SetJobError(ctx, &jobmodel.SetJobErrorPathParams{JobID: j.ID})
 		if err != nil {
 			fmt.Println(j.ID, err) // TODO - errs to chan?
 		} else {
 			fmt.Println("set error", j.ID)
 		}
 	} else {
-		err = r.jobClient.SetSuccess(ctx, j.ID)
+		_, _, err = r.jobClient.SetJobSuccess(ctx, &jobmodel.SetJobSuccessPathParams{JobID: j.ID})
 		if err != nil {
 			fmt.Println(j.ID, err) // TODO - errs to chan?
 		} else {

@@ -66,6 +66,7 @@ export function MainDataView() {
       />
       <ResultView>
         {loading && <Loader size={'25px'} borderSize={'5px'} />}
+
         {queryResult && <QueryResultView queryResult={queryResult} />}
       </ResultView>
       {/* <div

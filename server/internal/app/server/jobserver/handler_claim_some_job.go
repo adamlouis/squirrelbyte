@@ -20,14 +20,11 @@ func (h *hdl) ClaimSomeJob(ctx context.Context, body *jobmodel.ClaimSomeJobReque
 	if err != nil {
 		return nil, err
 	}
-
 	if out == nil {
 		return nil, nil
 	}
-
 	if err = commit(); err != nil {
 		return nil, err
 	}
-
 	return out, nil
 }

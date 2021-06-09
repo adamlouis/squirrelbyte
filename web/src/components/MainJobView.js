@@ -115,6 +115,7 @@ export const MainJobView = connect(mapStateToProps)(function View(props) {
               'input',
               'created_at',
               'scheduled_for',
+              'succeeded_at',
             ]}
             renderers={[
               (p) => {

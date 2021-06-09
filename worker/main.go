@@ -4,37 +4,50 @@ import (
 	"context"
 	"log"
 
-	"github.com/adamlouis/squirrelbyte/server/pkg/client"
-	"github.com/adamlouis/squirrelbyte/server/pkg/model"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/documentclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/jobclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/client/kvclient"
+	"github.com/adamlouis/squirrelbyte/server/pkg/model/jobmodel"
+	"github.com/adamlouis/squirrelbyte/worker/pkg/integrations/example"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/integrations/hackernews"
+	"github.com/adamlouis/squirrelbyte/worker/pkg/integrations/spotify"
 	"github.com/adamlouis/squirrelbyte/worker/pkg/worker"
 )
 
 const (
-	jobDomain = "http://localhost:9922"
+	jobURL      = "http://localhost:9922/api"
+	documentURL = "http://localhost:9922/api"
+	kvURL       = "http://localhost:9922/api"
 )
 
-type WorkerFn func(ctx context.Context, j *model.Job) (map[string]interface{}, error)
+type WorkerFn func(ctx context.Context, j *jobmodel.Job) (map[string]interface{}, error)
 
 func main() {
 	ctx := context.Background()
 
-	jobClient := client.NewHTTPJobClient(jobDomain)
-	documentClient := client.NewHTTPDocumentClient(jobDomain)
+	jobClient := jobclient.NewHTTPClient(jobURL)
+	documentClient := documentclient.NewHTTPClient(documentURL)
+	kvClient := kvclient.NewHTTPClient(kvURL)
 
 	pollingRunner := worker.NewPollingRunner(jobClient, 3)
 
 	hn := hackernews.Integration{JobClient: jobClient, DocumentClient: documentClient}
+	ex := example.Integration{JobClient: jobClient, DocumentClient: documentClient}
+	sp := spotify.Integration{JobClient: jobClient, DocumentClient: documentClient, KVClient: kvClient}
 
-	err := pollingRunner.Register(hn.GetTopStoriesWorker())
-	if err != nil {
-		log.Fatal(err)
+	workers := []*worker.Worker{
+		hn.GetTopStoriesWorker(),
+		hn.GetItemWorker(),
+		ex.GetTheJobWorker(),
+		sp.GetFetchRecentPlaysWorker(),
 	}
 
-	err = pollingRunner.Register(hn.GetItemWorker())
-	if err != nil {
-		log.Fatal(err)
+	for _, w := range workers {
+		err := pollingRunner.Register(w)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	pollingRunner.Run(ctx)
+	log.Fatal(pollingRunner.Run(ctx))
 }

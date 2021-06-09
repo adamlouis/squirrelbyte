@@ -147,7 +147,9 @@ export function QueryResultView(props) {
           />
         )}
         {!_.isEmpty(documents) && (
-          <JSONGrid documents={documents} paths={selectedPaths} />
+          <div style={{ height: '500px', width: '100%' }}>
+            <JSONGrid documents={documents} paths={selectedPaths} />
+          </div>
         )}
       </TabContent>
     </Container>
